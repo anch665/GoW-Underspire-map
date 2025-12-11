@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Underspire Map Live</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h2>Underspire Map Live (20×20)</h2>
+
+  <div id="errorBox" class="error-box" style="display: none;"></div>
+
+  <!-- Загрузка: файл или текст -->
+  <div class="upload-container">
+    <div class="upload-box left">
+      <h3>📥 Загрузить файл</h3>
+      <div id="dropZone" class="drop-zone">
+        Перетащите сюда JSON-файл или 
+        <label for="fileInput" class="file-label">выберите файл</label>
+        <input type="file" id="fileInput" accept=".json" style="display:none;" />
+      </div>
+    </div>
+
+    <div class="upload-box right">
+      <h3>✍️ Вставить JSON</h3>
+      <div class="text-input-container">
+        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'></textarea>
+        <button type="button" id="submitTextBtn">Загрузить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Статистика и карта -->
+  <div id="stats" style="margin: 15px 0; text-align: center; font-size: 14px;"></div>
+  <div class="map-legend-container">
+    <div class="map-grid-container">
+      <div id="mapGrid" class="map-grid"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
