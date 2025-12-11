@@ -174,14 +174,14 @@ h2 {
 .collected-treasure {
   border: 3px solid #00BFFF !important;
   box-sizing: border-box;
-  width: 26px;
-  height: 26px;
+  width: 31px;
+  height: 31px;
 }
 .special-completed {
   border: 3px solid #FFA500 !important;
   box-sizing: border-box;
-  width: 26px;
-  height: 26px;
+  width: 31px;
+  height: 31px;
 }
 .cell:hover::after {
   content: "ID: " attr(data-original-id);
