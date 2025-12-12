@@ -4,42 +4,571 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Underspire Map Live</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: #1e1e1e;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h2 {
+      margin-bottom: 15px;
+    }
+
+    /* === Upload === */
+    .upload-container {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 20px;
+    }
+    .upload-box {
+      background: #2d2d2d;
+      padding: 15px;
+      border-radius: 8px;
+      flex: 1;
+    }
+    .upload-box h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #555;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      background: #252525;
+      transition: background 0.3s;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .drop-zone.drag-over {
+      background: #333;
+      border-color: #4a90e2;
+    }
+    .file-label {
+      color: #4a90e2;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .file-label:hover {
+      color: #357abd;
+    }
+
+    .text-input-container {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    #jsonTextarea {
+      flex: 1;
+      height: 120px;
+      background: #1e1e1e;
+      color: #0f0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      resize: none;
+    }
+    #submitTextBtn {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0 12px;
+      font-size: 14px;
+      height: 120px;
+    }
+    #submitTextBtn:hover {
+      background: #357abd;
+    }
+
+    .error-box {
+      background: #442222;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 900px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    /* === Map === */
+    .map-legend-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .map-grid-container {
+      width: fit-content;
+    }
+    .map-grid {
+      display: grid;
+      grid-template-columns: 32px repeat(20, 32px) 32px;
+      grid-template-rows: auto repeat(20, 32px) auto;
+      gap: 0;
+      border: 2px solid #555;
+    }
+    .axis-label {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      background: #333;
+      color: #aaa;
+      user-select: none;
+    }
+    .y-label {
+      background: #2d2d2d !important;
+      border-right: 1px solid #555;
+      border-left: 1px solid #555;
+    }
+    .cell {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      border: 1px solid #000;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .empty { background-color: #2a2a2a; }
+    .room { background-color: #ffffff; color: #000; }
+    .completed { background-color: #87CEFA; color: #000; }
+    .treasure {
+      background-color: #FFD700;
+      color: #000;
+      font-weight: bold;
+      font-size: 10px;
+    }
+    .boss {
+      background-color: #32CD32;
+      color: #000;
+      font-weight: bold;
+      font-size: 10px;
+    }
+    .gate {
+      background-color: #FF4500;
+      color: white;
+      font-weight: bold;
+      font-size: 10px;
+    }
+    .current-location {
+      border: 5px solid #0000FF !important;
+      box-sizing: border-box;
+      width: 31px;
+      height: 31px;
+      z-index: 10;
+    }
+    .collected-treasure {
+      border: 3px solid #00BFFF !important;
+      box-sizing: border-box;
+      width: 31px;
+      height: 31px;
+    }
+    .special-completed {
+      border: 3px solid #FFA500 !important;
+      box-sizing: border-box;
+      width: 31px;
+      height: 31px;
+    }
+    .cell:hover::after {
+      content: "ID: " attr(data-original-id);
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 100;
+    }
+
+    /* === Legend === */
+    .legend {
+      width: 280px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #2a2a2a;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .legend-color {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border: 1px solid #000;
+    }
+  </style>
 </head>
 <body>
   <h2>Underspire Map Live (20×20)</h2>
+  <div id="errorBox" class="error-box" style="display:none;"></div>
 
-  <div id="errorBox" class="error-box" style="display: none;"></div>
-
-  <!-- Загрузка: файл или текст -->
   <div class="upload-container">
     <div class="upload-box left">
       <h3>📥 Загрузить файл</h3>
       <div id="dropZone" class="drop-zone">
         Перетащите сюда JSON-файл или 
         <label for="fileInput" class="file-label">выберите файл</label>
-        <input type="file" id="fileInput" accept=".json" style="display:none;" />
+        <input type="file" id="fileInput" accept=".json" style="display:none;">
       </div>
     </div>
-
     <div class="upload-box right">
       <h3>✍️ Вставить JSON</h3>
       <div class="text-input-container">
-        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'></textarea>
+        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"Info":{"UnderspireData":{"Map":[[15,15,15,3,3,3,15,15,15,15,15,15,15,15,15,15,15,15,15,15],/* ... shortened for demo ... */],"Completed":[],"TreasureRoomInfo":{},"BossRoomInfo":{},"Gates":{},"Collected":[],"CurrentNode":"0303"}}}}</textarea>
         <button type="button" id="submitTextBtn">Загрузить</button>
       </div>
     </div>
   </div>
 
-  <!-- Статистика и карта -->
-  <div id="stats" style="margin: 15px 0; text-align: center; font-size: 14px;"></div>
-  <div class="map-legend-container">
-    <div class="map-grid-container">
-      <div id="mapGrid" class="map-grid"></div>
-    </div>
-    <div class="legend" id="legend"></div>
-  </div>
+  <div id="mapContainer"></div>
 
-  <script src="script.js"></script>
+  <script>
+    // ======================
+    // 🧩 Вспомогательные функции (JS)
+    // ======================
+
+    function _normalizeRoomId(roomId) {
+      let s = String(roomId);
+      if (s.length >= 2) {
+        const prefix = s.slice(0, 2);
+        const suffix = s.slice(2).padStart(2, '0');
+        switch (prefix) {
+          case '90': return '10' + suffix;
+          case '99': return '17' + suffix;
+          case '98': return '18' + suffix;
+          case '97': return '19' + suffix;
+          case '54': return '14' + suffix;
+          default: return s;
+        }
+      }
+      return s;
+    }
+
+    function _parsePosition(roomId) {
+      const s = String(roomId).padStart(4, '0');
+      if (s.length !== 4) return null;
+      const y = parseInt(s.slice(0, 2), 10);
+      const x = parseInt(s.slice(2), 10);
+      if (y >= 0 && y < 20 && x >= 0 && x < 20) return [y, x];
+      return null;
+    }
+
+    function _parseRoomsDict(roomDict) {
+      const result = {};
+      for (const [coordKey, roomId] of Object.entries(roomDict)) {
+        const pos = _parsePosition(coordKey);
+        if (pos) result[pos.join(',')] = roomId;
+      }
+      return result;
+    }
+
+    function parseMapData(dataJson) {
+      try {
+        const { result } = dataJson;
+        const mapData = result.Info.UnderspireData.Map;
+        const completedIds = result.Info.UnderspireData.Completed || [];
+        const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
+        const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
+        const gatesInfo = result.Info.UnderspireData.Gates || {};
+        const collectedRaw = result.Info.UnderspireData.Collected || [];
+        const current_node = result.Info.UnderspireData.CurrentNode;
+
+        const currentPos = _parsePosition(current_node);
+
+        const normalizedCompleted = completedIds.map(id => _normalizeRoomId(id));
+        const completedCoords = new Set();
+        for (const id of normalizedCompleted) {
+          const pos = _parsePosition(id);
+          if (pos) completedCoords.add(pos.join(','));
+        }
+
+        const treasureRooms = _parseRoomsDict(treasureInfo);
+        const bossRooms = _parseRoomsDict(bossInfo);
+
+        const normalizedCollected = collectedRaw.map(id => _normalizeRoomId(id));
+        const collectedCoords = new Set();
+        for (const id of normalizedCollected) {
+          const pos = _parsePosition(id);
+          if (pos) collectedCoords.add(pos.join(','));
+        }
+
+        const collectedTreasureCoords = new Set(
+          Object.keys(treasureRooms).filter(key => collectedCoords.has(key))
+        );
+
+        const gateCells = {};
+        const gatePairs = {};
+        for (const [gateId, gateData] of Object.entries(gatesInfo)) {
+          const node = gateData.Node;
+          const direction = gateData.Dir;
+          const basePos = _parsePosition(node);
+          if (!basePos) continue;
+
+          const [y, x] = basePos;
+          let cells;
+          if (direction === 1) { // horizontal
+            cells = [[y, x], [y, x + 1]];
+          } else if (direction === 0) { // vertical
+            cells = [[y, x], [y - 1, x]];
+          } else continue;
+
+          if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
+            gatePairs[gateId] = cells;
+            for (const cell of cells) {
+              gateCells[cell.join(',')] = gateId;
+            }
+          }
+        }
+
+        return {
+          mapData,
+          completedCoords,
+          treasureRooms,
+          bossRooms,
+          gateCells,
+          gatePairs,
+          collectedTreasureCoords,
+          currentPos
+        };
+      } catch (e) {
+        throw new Error("Ошибка парсинга JSON: " + (e.message || e));
+      }
+    }
+
+    // ======================
+    // 🎨 Отрисовка карты
+    // ======================
+
+    function renderMap(data) {
+      const {
+        mapData,
+        completedCoords,
+        treasureRooms,
+        bossRooms,
+        gateCells,
+        gatePairs,
+        collectedTreasureCoords,
+        currentPos
+      } = data;
+
+      const rows = 20, cols = 20;
+
+      let totalRooms = 0, remainingRooms = 0;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (mapData[y][x] !== 15) {
+            totalRooms++;
+            if (!completedCoords.has(`${y},${x}`)) remainingRooms++;
+          }
+        }
+      }
+
+      const axisLabels = Array.from({length: cols}, (_, x) =>
+        `<div class="axis-label">${x}</div>`
+      ).join('');
+
+      let mapRows = '';
+      for (let y = 0; y < rows; y++) {
+        let rowCells = `<div class="axis-label y-label">${y}</div>`;
+        for (let x = 0; x < cols; x++) {
+          const cellValue = mapData[y][x];
+          const posKey = `${y},${x}`;
+          const pos = [y, x];
+          let cssClasses = ['cell'];
+          let displayText = '';
+          let isSpecial = false;
+
+          if (gateCells[posKey] !== undefined) {
+            const gid = gateCells[posKey];
+            cssClasses.push('gate');
+            displayText = String(Number(gid) + 1);
+            isSpecial = true;
+          } else if (treasureRooms[posKey] !== undefined) {
+            cssClasses.push('treasure');
+            displayText = String(treasureRooms[posKey]);
+            isSpecial = true;
+          } else if (bossRooms[posKey] !== undefined) {
+            cssClasses.push('boss');
+            displayText = String(bossRooms[posKey]);
+            isSpecial = true;
+          } else if (cellValue === 15) {
+            cssClasses.push('empty');
+          } else if (completedCoords.has(posKey)) {
+            cssClasses.push('completed');
+          } else {
+            cssClasses.push('room');
+          }
+
+          if (isSpecial && completedCoords.has(posKey)) {
+            cssClasses.push('special-completed');
+          }
+
+          if (currentPos && currentPos[0] === y && currentPos[1] === x) {
+            cssClasses.push('current-location');
+          }
+
+          if (collectedTreasureCoords.has(posKey)) {
+            cssClasses.push('collected-treasure');
+          }
+
+          const classStr = cssClasses.join(' ');
+          rowCells += `<div class="${classStr}" data-original-id="${cellValue}">${displayText}</div>`;
+        }
+        rowCells += `<div class="axis-label y-label">${y}</div>`;
+        mapRows += `<div style="display:contents;">${rowCells}</div>`;
+      }
+
+      const legendHtml = `
+        <div class="legend-item"><div class="legend-color" style="border:5px solid #0000FF;"></div><span>Текущая позиция</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div><span>Ворота (ID — номер пары)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;"></div><span>Босс(ключ)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div><span>Посещенные комнаты</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#ffffff;"></div><span>Комнаты</span></div>
+        <div class="legend-item"><div class="legend-color" style="border:3px solid #FFA500;"></div><span>Пройденные особые комнаты</span></div>
+      `;
+
+      const stats = `
+        <p>
+          Пройдено: ${completedCoords.size} | 
+          Сокровищ: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
+          Боссов: ${Object.keys(bossRooms).length} | 
+          Ворот: ${Object.keys(gatePairs).length}
+        </p>
+        <p><strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong></p>
+      `;
+
+      return `
+        ${stats}
+        <div class="map-legend-container">
+          <div class="map-grid-container">
+            <div class="map-grid">
+              <div class="axis-label"></div>
+              ${axisLabels}
+              <div class="axis-label"></div>
+              ${mapRows}
+              <div class="axis-label"></div>
+              ${axisLabels}
+              <div class="axis-label"></div>
+            </div>
+          </div>
+          <div class="legend">
+            ${legendHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('errorBox').style.display = 'none';
+    }
+
+    function processData(jsonData) {
+      try {
+        const data = parseMapData(jsonData);
+        const html = renderMap(data);
+        document.getElementById('mapContainer').innerHTML = html;
+        hideError();
+      } catch (e) {
+        showError(e.message || String(e));
+      }
+    }
+
+    // ======================
+    // 🖱️ Обработчики событий
+    // ======================
+
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        processData(json);
+      } catch (err) {
+        showError("Некорректный JSON-файл: " + (err.message || err));
+      }
+    });
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    document.getElementById('submitTextBtn').addEventListener('click', () => {
+      const text = document.getElementById('jsonTextarea').value.trim();
+      if (!text) {
+        showError('Поле JSON пусто');
+        return;
+      }
+      try {
+        const json = JSON.parse(text);
+        processData(json);
+      } catch (err) {
+        showError("Некорректный JSON: " + (err.message || err));
+      }
+    });
+
+    // Initial demo: render empty or demo map
+    window.onload = () => {
+      // Try to load from URL param or localStorage? Not implemented now.
+      // Just leave blank until user uploads.
+    };
+  </script>
 </body>
 </html>
