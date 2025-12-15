@@ -255,24 +255,7 @@
     // 🧩 Вспомогательные функции (JS)
     // ======================
 
-    function _normalizeRoomId(roomId) {
-      let s = String(roomId);
-      if (s.length >= 2) {
-        const prefix = s.slice(0, 2);
-        const suffix = s.slice(2).padStart(2, '0');
-        switch (prefix) {
-          case '90': return '10' + suffix;
-          case '99': return '17' + suffix;
-          case '98': return '18' + suffix;
-          case '97': return '19' + suffix;
-          case '88': return '08' + suffix;
-          case '89': return '09' + suffix;
-          case '54': return '14' + suffix;
-          default: return s;
-        }
-      }
-      return s;
-    }
+
 
     function _parsePosition(roomId) {
       const s = String(roomId).padStart(4, '0');
@@ -305,22 +288,26 @@
 
         const currentPos = _parsePosition(current_node);
 
-        const normalizedCompleted = completedIds.map(id => _normalizeRoomId(id));
-        const completedCoords = new Set();
-        for (const id of normalizedCompleted) {
-          const pos = _parsePosition(id);
-          if (pos) completedCoords.add(pos.join(','));
-        }
+		const completedCoords = new Set();
+		for (const id of completedIds) {
+		  const num = Number(id);
+		  if (!isNaN(num) && num >= 0 && num <= 1919) {
+			const pos = _parsePosition(num); // _parsePosition сам делает padStart
+			if (pos) completedCoords.add(pos.join(','));
+		  }
+		}
 
         const treasureRooms = _parseRoomsDict(treasureInfo);
         const bossRooms = _parseRoomsDict(bossInfo);
 
-        const normalizedCollected = collectedRaw.map(id => _normalizeRoomId(id));
-        const collectedCoords = new Set();
-        for (const id of normalizedCollected) {
-          const pos = _parsePosition(id);
-          if (pos) collectedCoords.add(pos.join(','));
-        }
+		const collectedCoords = new Set();
+		for (const id of collectedRaw) {
+		  const num = Number(id);
+		  if (!isNaN(num) && num >= 0 && num <= 1919) {
+			const pos = _parsePosition(num);
+			if (pos) collectedCoords.add(pos.join(','));
+		  }
+		}
 
         const collectedTreasureCoords = new Set(
           Object.keys(treasureRooms).filter(key => collectedCoords.has(key))
@@ -408,19 +395,19 @@
           let displayText = '';
           let isSpecial = false;
 
-          if (gateCells[posKey] !== undefined) {
-            const gid = gateCells[posKey];
-            cssClasses.push('gate');
-            displayText = String(Number(gid) + 1);
-            isSpecial = true;
-          } else if (treasureRooms[posKey] !== undefined) {
-            cssClasses.push('treasure');
-            displayText = String(treasureRooms[posKey]);
-            isSpecial = true;
-          } else if (bossRooms[posKey] !== undefined) {
-            cssClasses.push('boss');
-            displayText = String(bossRooms[posKey]);
-            isSpecial = true;
+		  if (bossRooms[posKey] !== undefined) {
+  		    cssClasses.push('boss');
+		    displayText = String(bossRooms[posKey]);
+		    isSpecial = true;
+		  } else if (treasureRooms[posKey] !== undefined) {
+		    cssClasses.push('treasure');
+		    displayText = String(treasureRooms[posKey]);
+		    isSpecial = true;
+		  } else if (gateCells[posKey] !== undefined) {
+		    const gid = gateCells[posKey];
+		    cssClasses.push('gate');
+		    displayText = String(Number(gid) + 1);
+		    isSpecial = true;
           } else if (cellValue === 15) {
             cssClasses.push('empty');
           } else if (completedCoords.has(posKey)) {
@@ -438,7 +425,8 @@
           }
 
           if (collectedTreasureCoords.has(posKey)) {
-            cssClasses.push('collected-treasure');
+            //cssClasses.push('collected-treasure');
+			cssClasses.push('special-completed');
           }
 
           const classStr = cssClasses.join(' ');
