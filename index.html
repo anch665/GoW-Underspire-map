@@ -178,31 +178,28 @@
       height: 31px;
       z-index: 10;
     }
-    .collected-treasure {
-      border: 3px solid #00BFFF !important;
-      box-sizing: border-box;
-      width: 31px;
-      height: 31px;
-    }
     .special-completed {
       border: 3px solid #FFA500 !important;
       box-sizing: border-box;
       width: 31px;
       height: 31px;
     }
+
+    /* Всплывающая подсказка для ExtraRooms */
     .cell:hover::after {
-      content: "ID: " attr(data-original-id);
+      content: attr(data-tooltip);
       position: absolute;
-      bottom: -24px;
+      bottom: -36px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.85);
       color: white;
-      padding: 2px 6px;
+      padding: 4px 6px;
       border-radius: 3px;
-      font-size: 11px;
-      white-space: nowrap;
+      font-size: 10px;
+      white-space: pre;
       z-index: 100;
+      text-align: center;
     }
 
     /* === Legend === */
@@ -246,7 +243,7 @@
     <div class="upload-box right">
       <h3>✍️ Вставить JSON</h3>
       <div class="text-input-container">
-        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,50741259,15,50741259],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,72351931,15,393228,50716673,17170438],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,50741260,17170437,67493893,67489794,6291627],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,50679819,15,17149962,67493898],[15,15,15,15,15,15,15,15,15,15,15,50630669,50618371,15,33914893,33902595,335880,50679895,33927176,50712582],[15,15,15,15,15,15,15,15,15,15,15,17064027,67383306,15,15,33890316,323586,15,360456,50692099],[15,15,15,15,15,15,15,15,15,15,70541357,67383300,50593794,15,50630665,67420165,50655236,17113093,33902598,67481610],[15,15,15,15,54599771,15,15,15,15,262153,67358723,17027081,33816580,274437,17063938,54526139,36974635,5636141,67493889,17158146],[15,15,67133449,151,61448,33628167,106507,16875529,54632519,20971678,17014796,17014786,237581,17002499,17063948,33853446,50593800,53477559,38142014,50716682],[15,67133451,16797706,33607689,67166210,68157595,33652748,33640450,67207177,16883717,52428983,33779724,208897,16986112,50556933,67346437,249862,15,15,33947658],[33554459,50352138,50348042,16822282,33615884,67182598,61449,67182596,33640454,67235849,139269,50479107,16969738,225294,19923099,15,15,15,15,72351902],[33554442,16396,67121154,67153928,53253,67166213,16838660,67182597,67194883,67223560,67223555,50491400,67289094,208905,50556934,15,15,15,15,15],[50331836,50331651,67117066,16814092,28675,28681,16814083,17825979,67207180,33660934,6723550,50491404,50511877,16969734,15,15,15,15,15,15],[4105,50335748,67117060,12291,50356232,50356226,45068,33607686,50491401,147461,33693700,50479105,35811367,15,15,15,15,15,15,15],[50339852,50343939,15,33570828,50352134,33583114,38850619,15,52428958,15,15,52588590,15,15,15,15,15,15,15,15],[15,4210782,15,15,15,33591308,33599490,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,50384942,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Gates":{"0":{"Node":1703,"Dir":1},"1":{"Node":1405,"Dir":1},"2":{"Node":1309,"Dir":1},"3":{"Node":1211,"Dir":0},"4":{"Node":915,"Dir":1},"5":{"Node":619,"Dir":0}},"CurrentNode":"1412","Completed":[1300,1400,1500,1401,1301,1704,1604,1504,1503,1403,1303,1404,1405,1203,1204,1304,1305,1205,1605,1705,1805,1806,9906,9706,1104,9004,1406,5407,1408,1508,1509,1409,1309,1410,1510,1610,1609,1608,1708,1310,1311,1411,1412,1603,1703,1502,1402,1302,1202,1102,1103,1600,1700,1701,9801],"Collected":[1801,1906,1706,1004],"BossRoomInfo":{"519":16166,"1103":16165,"1109":16163,"1205":16161,"1314":16164,"1319":16162,"1708":16160},"TreasureRoomInfo":{"717":16170,"811":16170,"910":16185,"1004":16194,"1016":16185,"1017":16197,"1108":16193,"1118":16192,"1612":16179,"1706":16198,"1711":16179,"1801":16194,"1906":16167}}}}}</textarea>
+        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"Info":{"UnderspireData":{"Seed":-1657572488,"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":504,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504],"Collected":[702,704,605,1003,1002,902,504],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"DataVersion":11,"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}}}}}</textarea>
         <button type="button" id="submitTextBtn">Загрузить</button>
       </div>
     </div>
@@ -282,6 +279,7 @@
         const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
         const gatesInfo = result.Info.UnderspireData.Gates || {};
         const collectedRaw = result.Info.UnderspireData.Collected || [];
+        const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
         const current_node = result.Info.UnderspireData.CurrentNode;
 
         const currentPos = _parsePosition(current_node);
@@ -321,13 +319,13 @@
 
           const [y, x] = basePos;
           let cells;
-          if (direction === 1) { // horizontal right
+          if (direction === 1) { // right
             cells = [[y, x], [y, x + 1]];
-          } else if (direction === 3) { // horizontal left
+          } else if (direction === 3) { // left
             cells = [[y, x], [y, x - 1]];
-          } else if (direction === 0) { // vertical up
+          } else if (direction === 0) { // up
             cells = [[y, x], [y - 1, x]];
-          } else if (direction === 2) { // vertical down
+          } else if (direction === 2) { // down
             cells = [[y, x], [y + 1, x]];
           } else continue;
 
@@ -339,17 +337,28 @@
           }
         }
 
+        // === ПАРСИМ ExtraRooms ===
+        const extraRoomsMap = {};
+        for (const er of extraRooms) {
+          const roomId = er.RoomId;
+          const pos = _parsePosition(roomId);
+          if (pos) {
+            const key = pos.join(',');
+            extraRoomsMap[key] = {
+              TypeId: er.TypeId,
+              Data: er.Data !== undefined ? er.Data : null
+            };
+          }
+        }
+
         // === СОБИРАЕМ ВСЕ "ОСОБЕННЫЕ" КООРДИНАТЫ ===
         const specialCoords = new Set();
 
-        // Ворота
         for (const cells of Object.values(gatePairs)) {
           for (const [y, x] of cells) {
             specialCoords.add(`${y},${x}`);
           }
         }
-
-        // Сокровища и боссы
         Object.keys(treasureRooms).forEach(key => specialCoords.add(key));
         Object.keys(bossRooms).forEach(key => specialCoords.add(key));
 
@@ -363,7 +372,8 @@
           collectedCoords,
           collectedTreasureCoords,
           currentPos,
-          specialCoords
+          specialCoords,
+          extraRoomsMap
         };
       } catch (e) {
         throw new Error("Ошибка парсинга JSON: " + (e.message || e));
@@ -381,7 +391,8 @@
         collectedCoords,
         collectedTreasureCoords,
         currentPos,
-        specialCoords
+        specialCoords,
+        extraRoomsMap
       } = data;
 
       const rows = 20, cols = 20;
@@ -409,6 +420,7 @@
           let cssClasses = ['cell'];
           let displayText = '';
           let isSpecial = false;
+          let tooltipLines = [`ID: ${cellValue}`];
 
           if (bossRooms[posKey] !== undefined) {
             cssClasses.push('boss');
@@ -424,7 +436,6 @@
             displayText = String(Number(gid) + 1);
             isSpecial = true;
           } else if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
-            // Collected, но не Gates / Treasure / Boss → светло-зелёная
             cssClasses.push('collected-generic');
           } else if (cellValue === 15) {
             cssClasses.push('empty');
@@ -432,6 +443,21 @@
             cssClasses.push('completed');
           } else {
             cssClasses.push('room');
+          }
+
+          // === ДОБАВЛЯЕМ "E" для ExtraRooms ===
+          let hasExtra = extraRoomsMap.hasOwnProperty(posKey);
+          if (hasExtra) {
+            const extra = extraRoomsMap[posKey];
+            tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
+		    if (extra.TypeId === 5 && extra.Data === 16220) {
+			  tooltipLines.push('Сокровищница');
+			}
+            if (displayText) {
+              displayText += ', E';
+            } else {
+              displayText = 'E';
+            }
           }
 
           if (isSpecial && completedCoords.has(posKey)) {
@@ -446,8 +472,9 @@
             cssClasses.push('special-completed');
           }
 
+          const tooltip = tooltipLines.join('\n');
           const classStr = cssClasses.join(' ');
-          rowCells += `<div class="${classStr}" data-original-id="${cellValue}">${displayText}</div>`;
+          rowCells += `<div class="${classStr}" data-tooltip="${tooltip}">${displayText}</div>`;
         }
         rowCells += `<div class="axis-label y-label">${y}</div>`;
         mapRows += `<div style="display:contents;">${rowCells}</div>`;
@@ -462,6 +489,7 @@
         <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div><span>Посещённые комнаты</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#ffffff;"></div><span>Комнаты (не посещены)</span></div>
         <div class="legend-item"><div class="legend-color" style="border:3px solid #FFA500;"></div><span>Пройденные особые комнаты</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#aaa;font-weight:bold;color:#000;">E</div><span>Специальные объекты (ExtraRooms)</span></div>
       `;
 
       const stats = `
@@ -469,7 +497,8 @@
           Пройдено: ${completedCoords.size} | 
           Сокровищ: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
           Боссов: ${Object.keys(bossRooms).length} | 
-          Ворот: ${Object.keys(gatePairs).length}
+          Ворот: ${Object.keys(gatePairs).length} |
+          Extra: ${Object.keys(extraRoomsMap).length}
         </p>
         <p><strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong></p>
       `;
