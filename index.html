@@ -323,10 +323,14 @@
 
           const [y, x] = basePos;
           let cells;
-          if (direction === 1) { // horizontal
+          if (direction === 1) { // horizontal rigth
             cells = [[y, x], [y, x + 1]];
-          } else if (direction === 0) { // vertical
+          } else if (direction === 3) { // horizontal left
+            cells = [[y, x], [y, x - 1]];
+          } else if (direction === 0) { // vertical up
             cells = [[y, x], [y - 1, x]];
+          } else if (direction === 2) { // vertical down
+            cells = [[y, x], [y + 1, x]];
           } else continue;
 
           if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
