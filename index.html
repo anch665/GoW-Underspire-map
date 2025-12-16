@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name=" viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Underspire Map Live</title>
   <style>
     body {
@@ -168,7 +168,7 @@
       font-size: 10px;
     }
     .collected-generic {
-      background-color: #90EE90; /* lightgreen */
+      background-color: #90EE90;
       color: #000;
     }
     .current-location {
@@ -185,7 +185,6 @@
       height: 31px;
     }
 
-    /* Всплывающая подсказка */
     .cell:hover::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -202,7 +201,6 @@
       text-align: center;
     }
 
-    /* === Legend === */
     .legend {
       width: 280px;
       flex-shrink: 0;
@@ -252,21 +250,25 @@
   <div id="mapContainer"></div>
 
   <script>
-    // === ОПИСАНИЯ СОКРОВИЩНИЦ ===
-    const TreasureInfo = {
-      "16179": "Горящий схрон (обычная)\nПростые награды",
-      "16198": "Опутанное сокровище (редкая)\nФакелы 2шт",
-      "16194": "Зараженное богатство (эпическая)\nКлюч от хранилища",
-      "16170": "Промерзшее богатство (эпическая)\nКлюч от хранилища",
-      "16185": "Ошеломительный схрон (обычная)\nПростые награды",
-      "16177": "Заросшее изобилие (легендарная)\nФакелы 2шт",
-    };
+    // Глобальные переменные для описаний
+    let TreasureInfo = {};
+    let BossInfo = {};
 
-    // === ОПИСАНИЯ БОССОВ ===
-    const BossInfo = {
-      "16160": "Сапфировое логово,\nсапфиров 20, сфера мудрости",
-      "16161": "Изумрудное логово,\nИмперская дарственная 1шт,\nКлюч от эпического хранилища"
-    };
+    // Загрузка info.json при старте
+    async function loadDescriptions() {
+      try {
+        const response = await fetch('info.json');
+        if (!response.ok) {
+          throw new Error(`Не удалось загрузить info.json: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        TreasureInfo = data.TreasureInfo || {};
+        BossInfo = data.BossInfo || {};
+      } catch (err) {
+        console.warn('Не удалось загрузить info.json:', err);
+        // Используем пустые объекты — карта всё равно отобразится
+      }
+    }
 
     function _parsePosition(roomId) {
       const s = String(roomId).padStart(4, '0');
@@ -353,7 +355,6 @@
           }
         }
 
-        // === ПАРСИМ ExtraRooms ===
         const extraRoomsMap = {};
         for (const er of extraRooms) {
           const roomId = er.RoomId;
@@ -367,9 +368,7 @@
           }
         }
 
-        // === СОБИРАЕМ ВСЕ "ОСОБЕННЫЕ" КООРДИНАТЫ ===
         const specialCoords = new Set();
-
         for (const cells of Object.values(gatePairs)) {
           for (const [y, x] of cells) {
             specialCoords.add(`${y},${x}`);
@@ -438,35 +437,31 @@
           let isSpecial = false;
           let tooltipLines = [`ID: ${cellValue}`];
 
-          // === Обработка сокровищниц ===
+          // === Сокровищницы ===
           let treasureDesc = null;
           if (treasureRooms[posKey] !== undefined) {
             const treasureId = String(treasureRooms[posKey]);
             cssClasses.push('treasure');
             isSpecial = true;
-
             if (TreasureInfo.hasOwnProperty(treasureId)) {
               treasureDesc = TreasureInfo[treasureId];
-              tooltipLines.push(treasureDesc);
             } else {
               displayText = treasureId;
             }
           }
-          // === Обработка боссов ===
+          // === Боссы ===
           else if (bossRooms[posKey] !== undefined) {
             const bossId = String(bossRooms[posKey]);
             cssClasses.push('boss');
             isSpecial = true;
-
             if (BossInfo.hasOwnProperty(bossId)) {
-              // Отображаем "БЧ" вместо ID, если есть описание
-              displayText = 'Boss';
+              displayText = 'БЧ';
               tooltipLines.push(BossInfo[bossId]);
             } else {
               displayText = bossId;
             }
           }
-          // === Обработка ворот ===
+          // === Ворота ===
           else if (gateCells[posKey] !== undefined) {
             const gid = gateCells[posKey];
             cssClasses.push('gate');
@@ -485,18 +480,17 @@
           else if (completedCoords.has(posKey)) {
             cssClasses.push('completed');
           }
-          // === Не посещённые комнаты ===
+          // === Не посещённые ===
           else {
             cssClasses.push('room');
           }
 
-          // === Обработка ExtraRooms ===
+          // === ExtraRooms ===
           let hasExtra = extraRoomsMap.hasOwnProperty(posKey);
           let extraInlineStyle = '';
           if (hasExtra) {
             const extra = extraRoomsMap[posKey];
             let extraSymbol = 'E';
-
             if (extra.TypeId === 5 && extra.Data === 16220) {
               extraSymbol = 'С';
               tooltipLines.push('Сокровищница');
@@ -510,7 +504,6 @@
             } else {
               tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
             }
-
             if (displayText) {
               displayText += `, ${extraSymbol}`;
             } else {
@@ -518,23 +511,22 @@
             }
           }
 
-          // === Добавляем "Ч", если есть описание сокровищницы ===
+          // === Добавляем "Ч" для описанных сокровищниц ===
           if (treasureDesc !== null) {
             if (displayText) {
               displayText += ', Ч';
             } else {
               displayText = 'Ч';
             }
+            tooltipLines.push(treasureDesc);
           }
 
           if (isSpecial && completedCoords.has(posKey)) {
             cssClasses.push('special-completed');
           }
-
           if (currentPos && currentPos[0] === y && currentPos[1] === x) {
             cssClasses.push('current-location');
           }
-
           if (collectedTreasureCoords.has(posKey)) {
             cssClasses.push('special-completed');
           }
@@ -551,10 +543,8 @@
       const legendHtml = `
         <div class="legend-item"><div class="legend-color" style="border:5px solid #0000FF;"></div><span>Текущая позиция</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div><span>Ворота (ID — номер пары)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища(без описания)</span></div>
-		<div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">Ч</div><span>Страж сокровища</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;"></div><span>Босс (ключ) без описания</span></div>
-		<div class="legend-item"><div class="legend-color" style="background-color:#32CD32;color:#000;font-weight:bold;">Boss</div><span>Босс с описанием</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;"></div><span>Босс (ключ)</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#90EE90;"></div><span>Собранные обычные комнаты</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div><span>Посещённые комнаты</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#ffffff;"></div><span>Комнаты (не посещены)</span></div>
@@ -562,8 +552,8 @@
         <div class="legend-item"><div class="legend-color" style="background-color:#DA70D6;color:#fff;font-weight:bold;">T</div><span>Телепорт</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#aaa;font-weight:bold;color:#000;">Б</div><span>Брелоки (без факела)</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">С</div><span>Сокровищница (ExtraRoom)</span></div>
-        
-
+        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">Ч</div><span>Описанная сокровищница</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;color:#000;font-weight:bold;">БЧ</div><span>Босс с описанием</span></div>
       `;
 
       const stats = `
@@ -608,7 +598,9 @@
       document.getElementById('errorBox').style.display = 'none';
     }
 
-    function processData(jsonData) {
+    async function processData(jsonData) {
+      // Убедимся, что описания загружены
+      await loadDescriptionsIfNeeded();
       try {
         const data = parseMapData(jsonData);
         const html = renderMap(data);
@@ -616,6 +608,15 @@
         hideError();
       } catch (e) {
         showError(e.message || String(e));
+      }
+    }
+
+    // Глобальный флаг, чтобы не грузить info.json много раз
+    let descriptionsLoaded = false;
+    async function loadDescriptionsIfNeeded() {
+      if (!descriptionsLoaded) {
+        await loadDescriptions();
+        descriptionsLoaded = true;
       }
     }
 
@@ -629,7 +630,7 @@
       try {
         const text = await file.text();
         const json = JSON.parse(text);
-        processData(json);
+        await processData(json);
       } catch (err) {
         showError("Некорректный JSON-файл: " + (err.message || err));
       }
@@ -661,7 +662,7 @@
       }
     });
 
-    document.getElementById('submitTextBtn').addEventListener('click', () => {
+    document.getElementById('submitTextBtn').addEventListener('click', async () => {
       const text = document.getElementById('jsonTextarea').value.trim();
       if (!text) {
         showError('Поле JSON пусто');
@@ -669,11 +670,14 @@
       }
       try {
         const json = JSON.parse(text);
-        processData(json);
+        await processData(json);
       } catch (err) {
         showError("Некорректный JSON: " + (err.message || err));
       }
     });
+
+    // Загружаем описания при запуске (опционально, но полезно)
+    loadDescriptionsIfNeeded();
   </script>
 </body>
 </html>
