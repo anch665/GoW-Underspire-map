@@ -208,21 +208,21 @@
       flex-direction: column;
       gap: 8px;
     }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #2a2a2a;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    .legend-color {
-      flex-shrink: 0;
-      width: 20px;
-      height: 20px;
-      border: 1px solid #000;
-    }
+	.legend-item {
+	  display: flex;
+	  align-items: center;
+	  margin: 6px 0;
+	}
+	.legend-color {
+	  width: 36px;       /* Увеличенный размер клетки */
+	  height: 36px;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  margin-right: 10px;
+	  font-weight: bold;
+	  border: 1px solid #ccc; /* Опционально: лёгкая рамка для визуального разделения */
+	}
   </style>
 </head>
 <body>
@@ -455,7 +455,7 @@
             cssClasses.push('boss');
             isSpecial = true;
             if (BossInfo.hasOwnProperty(bossId)) {
-              displayText = 'БЧ';
+              displayText = 'Босс';
               tooltipLines.push(BossInfo[bossId]);
             } else {
               displayText = bossId;
