@@ -541,18 +541,54 @@
       }
 
       const legendHtml = `
-        <div class="legend-item"><div class="legend-color" style="border:5px solid #0000FF;"></div><span>Текущая позиция</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div><span>Ворота (ID — номер пары)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища</span></div>
-		    <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">Ч</div><span>Страж сокровища</span></div>
-		    <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;color:#000;font-weight:bold;">Босс</div><span>Босс с описанием</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div><span>Посещённые комнаты</span></div>        
-        <div class="legend-item"><div class="legend-color" style="background-color:#90EE90;"></div><span>Посещённые комнаты с наградами</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#ffffff;"></div><span>Не пройденные комнаты</span></div>
-        <div class="legend-item"><div class="legend-color" style="border:3px solid #FFA500;"></div><span>Посепщенные Боссы, Часовые и Ворота</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#DA70D6;color:#fff;font-weight:bold;">T</div><span>Телепорт</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#aaa;font-weight:bold;color:#000;">Б</div><span>Брелоки (без факела)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">С</div><span>Сокровищница(ExtraRoom)</span></div>
+		<div class="legend-item">
+		  <div class="legend-color" style="border:5px solid #0000FF; background: transparent;"></div>
+		  <span>Текущая позиция</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#FF4500;"></div>
+		  <span>Ворота (ID — номер пары)</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#FFD700;"></div>
+		  <span>Страж сокровища</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#FFD700; color:#000;">Ч</div>
+		  <span>Страж сокровища</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#32CD32; color:#000;">Босс</div>
+		  <span>Босс с описанием</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#87CEFA;"></div>
+		  <span>Посещённые комнаты</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#90EE90;"></div>
+		  <span>Посещённые комнаты с наградами</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#ffffff;"></div>
+		  <span>Не пройденные комнаты</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="border:3px solid #FFA500; background: transparent;"></div>
+		  <span>Посещённые Боссы, Часовые и Ворота</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#DA70D6; color:#fff;">T</div>
+		  <span>Телепорт</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#aaa; color:#000;">Б</div>
+		  <span>Брелоки (без факела)</span>
+		</div>
+		<div class="legend-item">
+		  <div class="legend-color" style="background-color:#FFD700; color:#000;">С</div>
+		  <span>Сокровищница (ExtraRoom)</span>
+		</div>
       `;
 
       const stats = `
