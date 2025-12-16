@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name=" viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Underspire Map Live</title>
   <style>
     body {
@@ -185,7 +185,7 @@
       height: 31px;
     }
 
-    /* Всплывающая подсказка для ExtraRooms */
+    /* Всплывающая подсказка */
     .cell:hover::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -252,6 +252,22 @@
   <div id="mapContainer"></div>
 
   <script>
+    // === ОПИСАНИЯ СОКРОВИЩНИЦ ===
+    const TreasureInfo = {
+      "16179": "Горящий схрон (обычная)\nПростые награды",
+      "16198": "Опутанное сокровище (редкая)\nФакелы 2шт",
+      "16194": "Зараженное богатство (эпическая)\nКлюч от хранилища",
+      "16170": "Промерзшее богатство (эпическая)\nКлюч от хранилища",
+      "16185": "Ошеломительный схрон (обычная)\nПростые награды",
+      "16177": "Заросшее изобилие (легендарная)\nФакелы 2шт",
+    };
+
+    // === ОПИСАНИЯ БОССОВ ===
+    const BossInfo = {
+      "16160": "Сапфировое логово,\nсапфиров 20, сфера мудрости",
+      "16161": "Изумрудное логово,\nИмперская дарственная 1шт,\nКлюч от эпического хранилища"
+    };
+
     function _parsePosition(roomId) {
       const s = String(roomId).padStart(4, '0');
       if (s.length !== 4) return null;
@@ -422,41 +438,92 @@
           let isSpecial = false;
           let tooltipLines = [`ID: ${cellValue}`];
 
-          if (bossRooms[posKey] !== undefined) {
-            cssClasses.push('boss');
-            displayText = String(bossRooms[posKey]);
-            isSpecial = true;
-          } else if (treasureRooms[posKey] !== undefined) {
+          // === Обработка сокровищниц ===
+          let treasureDesc = null;
+          if (treasureRooms[posKey] !== undefined) {
+            const treasureId = String(treasureRooms[posKey]);
             cssClasses.push('treasure');
-            displayText = String(treasureRooms[posKey]);
             isSpecial = true;
-          } else if (gateCells[posKey] !== undefined) {
+
+            if (TreasureInfo.hasOwnProperty(treasureId)) {
+              treasureDesc = TreasureInfo[treasureId];
+              tooltipLines.push(treasureDesc);
+            } else {
+              displayText = treasureId;
+            }
+          }
+          // === Обработка боссов ===
+          else if (bossRooms[posKey] !== undefined) {
+            const bossId = String(bossRooms[posKey]);
+            cssClasses.push('boss');
+            isSpecial = true;
+
+            if (BossInfo.hasOwnProperty(bossId)) {
+              // Отображаем "БЧ" вместо ID, если есть описание
+              displayText = 'Boss';
+              tooltipLines.push(BossInfo[bossId]);
+            } else {
+              displayText = bossId;
+            }
+          }
+          // === Обработка ворот ===
+          else if (gateCells[posKey] !== undefined) {
             const gid = gateCells[posKey];
             cssClasses.push('gate');
             displayText = String(Number(gid) + 1);
             isSpecial = true;
-          } else if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
+          }
+          // === Собранные обычные комнаты ===
+          else if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
             cssClasses.push('collected-generic');
-          } else if (cellValue === 15) {
+          }
+          // === Пустая клетка ===
+          else if (cellValue === 15) {
             cssClasses.push('empty');
-          } else if (completedCoords.has(posKey)) {
+          }
+          // === Посещённые комнаты ===
+          else if (completedCoords.has(posKey)) {
             cssClasses.push('completed');
-          } else {
+          }
+          // === Не посещённые комнаты ===
+          else {
             cssClasses.push('room');
           }
 
-          // === ДОБАВЛЯЕМ "E" для ExtraRooms ===
+          // === Обработка ExtraRooms ===
           let hasExtra = extraRoomsMap.hasOwnProperty(posKey);
+          let extraInlineStyle = '';
           if (hasExtra) {
             const extra = extraRoomsMap[posKey];
-            tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
-		    if (extra.TypeId === 5 && extra.Data === 16220) {
-			  tooltipLines.push('Сокровищница');
-			}
-            if (displayText) {
-              displayText += ', E';
+            let extraSymbol = 'E';
+
+            if (extra.TypeId === 5 && extra.Data === 16220) {
+              extraSymbol = 'С';
+              tooltipLines.push('Сокровищница');
+            } else if (extra.TypeId === 2) {
+              extraSymbol = 'Б';
+              tooltipLines.push('Брелоки (без факела)');
+            } else if (extra.TypeId === 1) {
+              extraSymbol = 'T';
+              tooltipLines.push(`Телепорт → ${extra.Data || '—'}`);
+              extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
             } else {
-              displayText = 'E';
+              tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
+            }
+
+            if (displayText) {
+              displayText += `, ${extraSymbol}`;
+            } else {
+              displayText = extraSymbol;
+            }
+          }
+
+          // === Добавляем "Ч", если есть описание сокровищницы ===
+          if (treasureDesc !== null) {
+            if (displayText) {
+              displayText += ', Ч';
+            } else {
+              displayText = 'Ч';
             }
           }
 
@@ -474,7 +541,8 @@
 
           const tooltip = tooltipLines.join('\n');
           const classStr = cssClasses.join(' ');
-          rowCells += `<div class="${classStr}" data-tooltip="${tooltip}">${displayText}</div>`;
+          const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
+          rowCells += `<div class="${classStr}" data-tooltip="${tooltip}"${styleAttr}>${displayText}</div>`;
         }
         rowCells += `<div class="axis-label y-label">${y}</div>`;
         mapRows += `<div style="display:contents;">${rowCells}</div>`;
@@ -483,13 +551,19 @@
       const legendHtml = `
         <div class="legend-item"><div class="legend-color" style="border:5px solid #0000FF;"></div><span>Текущая позиция</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#FF4500;"></div><span>Ворота (ID — номер пары)</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;"></div><span>Босс (ключ)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;"></div><span>Страж сокровища(без описания)</span></div>
+		<div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">Ч</div><span>Страж сокровища</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#32CD32;"></div><span>Босс (ключ) без описания</span></div>
+		<div class="legend-item"><div class="legend-color" style="background-color:#32CD32;color:#000;font-weight:bold;">Boss</div><span>Босс с описанием</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#90EE90;"></div><span>Собранные обычные комнаты</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#87CEFA;"></div><span>Посещённые комнаты</span></div>
         <div class="legend-item"><div class="legend-color" style="background-color:#ffffff;"></div><span>Комнаты (не посещены)</span></div>
         <div class="legend-item"><div class="legend-color" style="border:3px solid #FFA500;"></div><span>Пройденные особые комнаты</span></div>
-        <div class="legend-item"><div class="legend-color" style="background-color:#aaa;font-weight:bold;color:#000;">E</div><span>Специальные объекты (ExtraRooms)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#DA70D6;color:#fff;font-weight:bold;">T</div><span>Телепорт</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#aaa;font-weight:bold;color:#000;">Б</div><span>Брелоки (без факела)</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color:#FFD700;color:#000;font-weight:bold;">С</div><span>Сокровищница (ExtraRoom)</span></div>
+        
+
       `;
 
       const stats = `
