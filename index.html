@@ -16,26 +16,47 @@
       margin: 0;
     }
     h2 {
-      margin-bottom: 15px;
+      margin-bottom: 5px;
+      font-size: 20px;
     }
 
-    /* === Upload === */
-    .upload-container {
+    /* === Main Layout === */
+    .main-layout {
       display: flex;
       gap: 20px;
       width: 100%;
-      max-width: 900px;
-      margin-bottom: 20px;
+      max-width: 1600px;
+      margin-top: 10px;
     }
+
+    /* === Left Panel: Upload & JSON === */
+    .left-panel {
+      width: 360px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
     .upload-box {
       background: #2d2d2d;
       padding: 15px;
       border-radius: 8px;
-      flex: 1;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
     .upload-box h3 {
       margin-top: 0;
       font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .upload-box h3::before {
+      content: "📁";
+      font-size: 18px;
+    }
+    .upload-box h3.upload-json::before {
+      content: "📋";
     }
 
     .drop-zone {
@@ -47,6 +68,7 @@
       transition: background 0.3s;
       cursor: pointer;
       font-size: 14px;
+      margin-top: 10px;
     }
     .drop-zone.drag-over {
       background: #333;
@@ -62,55 +84,69 @@
     }
 
     .text-input-container {
-      display: flex;
+      flex-direction: column;
       gap: 8px;
       width: 100%;
+      margin-top: 10px;
     }
-    #jsonTextarea {
-      flex: 1;
-      height: 120px;
-      background: #1e1e1e;
-      color: #0f0;
-      border: 1px solid #444;
-      border-radius: 4px;
-      padding: 8px;
-      font-family: monospace;
-      resize: none;
-    }
-    #submitTextBtn {
-      background: #4a90e2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      padding: 0 12px;
-      font-size: 14px;
-      height: 120px;
-    }
-    #submitTextBtn:hover {
-      background: #357abd;
-    }
+	#jsonTextarea {
+	  flex: 1;
+	  width: 100%;
+	  min-height: 530px; /* минимальная высота на случай, если flex не сработает */
+	  background: #1e1e1e;
+	  color: #0f0;
+	  border: 1px solid #444;
+	  border-radius: 4px;
+	  padding: 8px;
+	  font-family: monospace;
+	  resize: vertical; /* можно тянуть вниз, но не обязательно */
+	  font-size: 12px;
+	  box-sizing: border-box;
+	}
 
-    .error-box {
-      background: #442222;
-      padding: 15px;
-      border-radius: 6px;
+	#submitTextBtn {
+	  background: #4a90e2;
+	  color: white;
+	  border: none;
+	  border-radius: 4px;
+	  cursor: pointer;
+	  padding: 10px;
+	  font-size: 14px;
+	  width: 100%;
+	  white-space: nowrap;
+	}
+	#submitTextBtn:hover {
+	  background: #357abd;
+	}
+
+    /* === Stats === */
+    .stats {
+      text-align: center;
       margin: 10px 0;
-      width: 100%;
-      max-width: 900px;
-      font-family: monospace;
-      white-space: pre-wrap;
+      font-size: 14px;
+      color: #ccc;
+      background: #2d2d2d;
+      padding: 10px;
+      border-radius: 6px;
+      max-width: 1400px; /* ширина под карту */
+    }
+    .stats strong {
+      color: #fff;
+      font-weight: bold;
     }
 
     /* === Map === */
-    .map-legend-container {
+    .map-container {
       display: flex;
       gap: 20px;
-      justify-content: center;
-      margin-top: 10px;
+      align-items: flex-start;
     }
+
     .map-grid-container {
-      width: fit-content;
+      background: #2d2d2d;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
     .map-grid {
       display: grid;
@@ -118,6 +154,7 @@
       grid-template-rows: auto repeat(20, 32px) auto;
       gap: 0;
       border: 2px solid #555;
+      background: #1e1e1e;
     }
     .axis-label {
       width: 32px;
@@ -141,38 +178,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 9px;
+      font-size: 10px;
+      font-weight: bold;
       border: 1px solid #000;
       box-sizing: border-box;
       position: relative;
+      background: #1e1e1e;
+      color: #fff;
     }
-    .empty { background-color: #2a2a2a; }
+    .empty { background-color: #1e1e1e; color: #555; }
     .room { background-color: #ffffff; color: #000; }
     .completed { background-color: #87CEFA; color: #000; }
-    .treasure {
-      background-color: #FFD700;
-      color: #000;
-      font-weight: bold;
-      font-size: 10px;
-    }
-    .boss {
-      background-color: #32CD32;
-      color: #000;
-      font-weight: bold;
-      font-size: 10px;
-    }
-    .gate {
-      background-color: #FF4500;
-      color: white;
-      font-weight: bold;
-      font-size: 10px;
-    }
-    .collected-generic {
-      background-color: #90EE90;
-      color: #000;
-    }
+    .collected-generic { background-color: #90EE90; color: #000; }
+    .treasure { background-color: #FFD700; color: #000; }
+    .boss { background-color: #32CD32; color: #fff; }
+    .gate { background-color: #FF4500; color: white; }
     .current-location {
-      border: 5px solid #0000FF !important;
+      border: 3px solid #0000FF !important;
       box-sizing: border-box;
       width: 31px;
       height: 31px;
@@ -201,72 +223,190 @@
       text-align: center;
     }
 
+    /* === Legend === */
     .legend {
       width: 280px;
       flex-shrink: 0;
+      background: #2d2d2d;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
-	.legend-item {
-	  display: flex;
-	  align-items: center;
-	  margin: 6px 0;
-	}
-	.legend-color {
-	  width: 36px;       /* Увеличенный размер клетки */
-	  height: 36px;
-	  display: flex;
-	  align-items: center;
-	  justify-content: center;
-	  margin-right: 10px;
-	  font-weight: bold;
-	  border: 1px solid #ccc; /* Опционально: лёгкая рамка для визуального разделения */
-	}
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 6px 0;
+    }
+    .legend-color {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-weight: bold;
+      font-size: 14px;
+      border: 1px solid #555;
+      border-radius: 3px;
+    }
+    .legend-color.blue-border {
+      border: 3px solid #0000FF;
+      background: transparent;
+    }
+    .legend-color.orange-border {
+      border: 3px solid #FFA500;
+      background: transparent;
+    }
+    .legend-color.red-bg {
+      background-color: #FF4500;
+      color: white;
+    }
+    .legend-color.green-bg {
+      background-color: #32CD32;
+      color: white;
+    }
+    .legend-color.yellow-bg {
+      background-color: #FFD700;
+      color: #000;
+    }
+    .legend-color.lightblue-bg {
+      background-color: #87CEFA;
+      color: #000;
+    }
+    .legend-color.greenlight-bg {
+      background-color: #90EE90;
+      color: #000;
+    }
+    .legend-color.white-bg {
+      background-color: #ffffff;
+      color: #000;
+    }
+    .legend-color.purple-bg {
+      background-color: #DA70D6;
+      color: #fff;
+    }
+    .legend-color.gray-bg {
+      background-color: #aaa;
+      color: #000;
+    }
+
+    /* === Error Box === */
+    .error-box {
+      background: #442222;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 1600px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <h2>Underspire Map Live (20×20)</h2>
   <div id="errorBox" class="error-box" style="display:none;"></div>
 
-  <div class="upload-container">
-    <div class="upload-box left">
-      <h3>📥 Загрузить файл</h3>
-      <div id="dropZone" class="drop-zone">
-        Перетащите сюда JSON-файл или 
-        <label for="fileInput" class="file-label">выберите файл</label>
-        <input type="file" id="fileInput" accept=".json" style="display:none;">
-      </div>
-    </div>
-    <div class="upload-box right">
-      <h3>✍️ Вставить JSON</h3>
-      <div class="text-input-container">
-        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Seed":-1657572488,"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504,404,304,8305,405,505,503,403,303,203,204,104,402,401,8400,8501,8506,507,607,606,1013,1014,8508,509,8609,610,608],"Collected":[702,704,605,1003,1002,902,504,404,305,203,400,501,506,507,1014,508,509,609,608],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"DataVersion":11,"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}},"Color":2,"DeepShrine":false,"Trinkets":{"0":1,"1":9,"2":7,"3":6,"4":11,"5":4},"Keystones":{"0":1,"1":1}},"SimpleRewardArray":[{"Type":"cursedRune","Data":0,"Amount":25,"Major":true}]}}</textarea>
-        <button type="button" id="submitTextBtn">Загрузить</button>
+  <div class="main-layout">
+
+    <!-- Center + Right: Stats, Map, Legend -->
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+
+      <div class="map-container">
+		<!-- Left Panel -->
+		<div class="left-panel">
+		  <div class="upload-box">
+			<h3>Загрузить файл</h3>
+			<div id="dropZone" class="drop-zone">
+			  Перетащите сюда JSON-файл или 
+			  <label for="fileInput" class="file-label">выберите файл</label>
+			  <input type="file" id="fileInput" accept=".json" style="display:none;">
+			</div>
+		  </div>
+		  <div class="upload-box">
+		    <h3 class="upload-json">Вставить JSON</h3>
+		    <div class="text-input-container">
+			<textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Seed":-1657572488,"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504,404,304,8305,405,505,503,403,303,203,204,104,402,401,8400,8501,8506,507,607,606,1013,1014,8508,509,8609,610,608],"Collected":[702,704,605,1003,1002,902,504,404,305,203,400,501,506,507,1014,508,509,609,608],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"DataVersion":11,"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}},"Color":2,"DeepShrine":false,"Trinkets":{"0":1,"1":9,"2":7,"3":6,"4":11,"5":4},"Keystones":{"0":1,"1":1}},"SimpleRewardArray":[{"Type":"cursedRune","Data":0,"Amount":25,"Major":true}]}}</textarea>
+			<button type="button" id="submitTextBtn">Загрузить</button>
+		  </div>
+		</div>
+		</div>
+
+        <div class="map-grid-container">
+		  <div id="mapStats" class="stats" style="display:none;"></div>
+          <div id="mapGrid" class="map-grid">
+            <!-- будет заполнено скриптом -->
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color blue-border"></div>
+            <span>Текущая позиция</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color orange-border"></div>
+            <span>Посещённые Боссы, Часовые и Ворота</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color red-bg">1</div>
+            <span>Ворота (номер пары)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color green-bg">Босс</div>
+            <span>Босс</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color yellow-bg">Ч</div>
+            <span>Часовой (страж сокровища)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color lightblue-bg"></div>
+            <span>Посещённые комнаты</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color greenlight-bg"></div>
+            <span>Посещённые комнаты с наградами</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color white-bg"></div>
+            <span>Не пройденные комнаты</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color purple-bg">T</div>
+            <span>Телепорт</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color gray-bg">Б</div>
+            <span>Брелоки (без факела)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color yellow-bg">С</div>
+            <span>Сокровищница (ExtraRoom)</span>
+          </div>
+        </div>
+		
       </div>
     </div>
   </div>
 
-  <div id="mapContainer"></div>
-
   <script>
-    // Глобальные переменные для описаний
     let TreasureInfo = {};
     let BossInfo = {};
 
-    // Загрузка info.json при старте
     async function loadDescriptions() {
       try {
         const response = await fetch('info.json');
-        if (!response.ok) {
-          throw new Error(`Не удалось загрузить info.json: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
         const data = await response.json();
         TreasureInfo = data.TreasureInfo || {};
         BossInfo = data.BossInfo || {};
       } catch (err) {
         console.warn('Не удалось загрузить info.json:', err);
-        // Используем пустые объекты — карта всё равно отобразится
       }
     }
 
@@ -289,125 +429,90 @@
     }
 
     function parseMapData(dataJson) {
-      try {
-        const { result } = dataJson;
-        const mapData = result.Info.UnderspireData.Map;
-        const completedIds = result.Info.UnderspireData.Completed || [];
-        const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
-        const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
-        const gatesInfo = result.Info.UnderspireData.Gates || {};
-        const collectedRaw = result.Info.UnderspireData.Collected || [];
-        const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
-        const current_node = result.Info.UnderspireData.CurrentNode;
+      const { result } = dataJson;
+      const mapData = result.Info.UnderspireData.Map;
+      const completedIds = result.Info.UnderspireData.Completed || [];
+      const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
+      const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
+      const gatesInfo = result.Info.UnderspireData.Gates || {};
+      const collectedRaw = result.Info.UnderspireData.Collected || [];
+      const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
+      const current_node = result.Info.UnderspireData.CurrentNode;
 
-        const currentPos = _parsePosition(current_node);
+      const currentPos = _parsePosition(current_node);
 
-        const completedCoords = new Set();
-        for (const id of completedIds) {
-          const num = Number(id);
-          if (!isNaN(num) && num >= 0 && num <= 1919) {
-            const pos = _parsePosition(num);
-            if (pos) completedCoords.add(pos.join(','));
-          }
+      const completedCoords = new Set();
+      for (const id of completedIds) {
+        const num = Number(id);
+        if (!isNaN(num) && num >= 0 && num <= 1919) {
+          const pos = _parsePosition(num);
+          if (pos) completedCoords.add(pos.join(','));
         }
-
-        const treasureRooms = _parseRoomsDict(treasureInfo);
-        const bossRooms = _parseRoomsDict(bossInfo);
-
-        const collectedCoords = new Set();
-        for (const id of collectedRaw) {
-          const num = Number(id);
-          if (!isNaN(num) && num >= 0 && num <= 1919) {
-            const pos = _parsePosition(num);
-            if (pos) collectedCoords.add(pos.join(','));
-          }
-        }
-
-        const collectedTreasureCoords = new Set(
-          Object.keys(treasureRooms).filter(key => collectedCoords.has(key))
-        );
-
-        const gateCells = {};
-        const gatePairs = {};
-        for (const [gateId, gateData] of Object.entries(gatesInfo)) {
-          const node = gateData.Node;
-          const direction = gateData.Dir;
-          const basePos = _parsePosition(node);
-          if (!basePos) continue;
-
-          const [y, x] = basePos;
-          let cells;
-          if (direction === 1) { // right
-            cells = [[y, x], [y, x + 1]];
-          } else if (direction === 3) { // left
-            cells = [[y, x], [y, x - 1]];
-          } else if (direction === 0) { // up
-            cells = [[y, x], [y - 1, x]];
-          } else if (direction === 2) { // down
-            cells = [[y, x], [y + 1, x]];
-          } else continue;
-
-          if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
-            gatePairs[gateId] = cells;
-            for (const cell of cells) {
-              gateCells[cell.join(',')] = gateId;
-            }
-          }
-        }
-
-        const extraRoomsMap = {};
-        for (const er of extraRooms) {
-          const roomId = er.RoomId;
-          const pos = _parsePosition(roomId);
-          if (pos) {
-            const key = pos.join(',');
-            extraRoomsMap[key] = {
-              TypeId: er.TypeId,
-              Data: er.Data !== undefined ? er.Data : null
-            };
-          }
-        }
-
-        const specialCoords = new Set();
-        for (const cells of Object.values(gatePairs)) {
-          for (const [y, x] of cells) {
-            specialCoords.add(`${y},${x}`);
-          }
-        }
-        Object.keys(treasureRooms).forEach(key => specialCoords.add(key));
-        Object.keys(bossRooms).forEach(key => specialCoords.add(key));
-
-        return {
-          mapData,
-          completedCoords,
-          treasureRooms,
-          bossRooms,
-          gateCells,
-          gatePairs,
-          collectedCoords,
-          collectedTreasureCoords,
-          currentPos,
-          specialCoords,
-          extraRoomsMap
-        };
-      } catch (e) {
-        throw new Error("Ошибка парсинга JSON: " + (e.message || e));
       }
+
+      const treasureRooms = _parseRoomsDict(treasureInfo);
+      const bossRooms = _parseRoomsDict(bossInfo);
+
+      const collectedCoords = new Set();
+      for (const id of collectedRaw) {
+        const num = Number(id);
+        if (!isNaN(num) && num >= 0 && num <= 1919) {
+          const pos = _parsePosition(num);
+          if (pos) collectedCoords.add(pos.join(','));
+        }
+      }
+
+      const collectedTreasureCoords = new Set(Object.keys(treasureRooms).filter(key => collectedCoords.has(key)));
+
+      const gateCells = {};
+      const gatePairs = {};
+      for (const [gateId, gateData] of Object.entries(gatesInfo)) {
+        const node = gateData.Node;
+        const direction = gateData.Dir;
+        const basePos = _parsePosition(node);
+        if (!basePos) continue;
+
+        const [y, x] = basePos;
+        let cells;
+        if (direction === 1) cells = [[y, x], [y, x + 1]];
+        else if (direction === 3) cells = [[y, x], [y, x - 1]];
+        else if (direction === 0) cells = [[y, x], [y - 1, x]];
+        else if (direction === 2) cells = [[y, x], [y + 1, x]];
+        else continue;
+
+        if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
+          gatePairs[gateId] = cells;
+          for (const cell of cells) {
+            gateCells[cell.join(',')] = gateId;
+          }
+        }
+      }
+
+      const extraRoomsMap = {};
+      for (const er of extraRooms) {
+        const roomId = er.RoomId;
+        const pos = _parsePosition(roomId);
+        if (pos) {
+          const key = pos.join(',');
+          extraRoomsMap[key] = { TypeId: er.TypeId, Data: er.Data !== undefined ? er.Data : null };
+        }
+      }
+
+      const specialCoords = new Set();
+      Object.values(gatePairs).forEach(cells => cells.forEach(([y, x]) => specialCoords.add(`${y},${x}`)));
+      Object.keys(treasureRooms).forEach(key => specialCoords.add(key));
+      Object.keys(bossRooms).forEach(key => specialCoords.add(key));
+
+      return {
+        mapData, completedCoords, treasureRooms, bossRooms, gateCells, gatePairs,
+        collectedCoords, collectedTreasureCoords, currentPos, specialCoords, extraRoomsMap
+      };
     }
 
     function renderMap(data) {
       const {
-        mapData,
-        completedCoords,
-        treasureRooms,
-        bossRooms,
-        gateCells,
-        gatePairs,
-        collectedCoords,
-        collectedTreasureCoords,
-        currentPos,
-        specialCoords,
-        extraRoomsMap
+        mapData, completedCoords, treasureRooms, bossRooms, gateCells, gatePairs,
+        collectedCoords, collectedTreasureCoords, currentPos, specialCoords, extraRoomsMap
       } = data;
 
       const rows = 20, cols = 20;
@@ -422,11 +527,18 @@
         }
       }
 
-      const axisLabels = Array.from({length: cols}, (_, x) =>
-        `<div class="axis-label">${x}</div>`
-      ).join('');
+      document.getElementById('mapStats').style.display = 'block';
+      document.getElementById('mapStats').innerHTML = `
+        Пройдено: ${completedCoords.size} | 
+        Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
+        Боссов: ${Object.keys(bossRooms).length} | 
+        Ворот: ${Object.keys(gatePairs).length}<br>
+        <strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong>
+      `;
 
+      const axisLabels = Array.from({length: cols}, (_, x) => `<div class="axis-label">${x}</div>`).join('');
       let mapRows = '';
+
       for (let y = 0; y < rows; y++) {
         let rowCells = `<div class="axis-label y-label">${y}</div>`;
         for (let x = 0; x < cols; x++) {
@@ -437,58 +549,49 @@
           let isSpecial = false;
           let tooltipLines = [`ID: ${cellValue}`];
 
-          // === Сокровищницы ===
           let treasureDesc = null;
           if (treasureRooms[posKey] !== undefined) {
             const treasureId = String(treasureRooms[posKey]);
             cssClasses.push('treasure');
             isSpecial = true;
-            if (TreasureInfo.hasOwnProperty(treasureId)) {
+            if (TreasureInfo[treasureId]) {
               treasureDesc = TreasureInfo[treasureId];
             } else {
               displayText = treasureId;
             }
           }
-          // === Боссы ===
           else if (bossRooms[posKey] !== undefined) {
             const bossId = String(bossRooms[posKey]);
             cssClasses.push('boss');
             isSpecial = true;
-            if (BossInfo.hasOwnProperty(bossId)) {
+            if (BossInfo[bossId]) {
               displayText = 'Босс';
               tooltipLines.push(BossInfo[bossId]);
             } else {
               displayText = bossId;
             }
           }
-          // === Ворота ===
           else if (gateCells[posKey] !== undefined) {
             const gid = gateCells[posKey];
             cssClasses.push('gate');
             displayText = String(Number(gid) + 1);
             isSpecial = true;
           }
-          // === Собранные обычные комнаты ===
           else if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
             cssClasses.push('collected-generic');
           }
-          // === Пустая клетка ===
           else if (cellValue === 15) {
             cssClasses.push('empty');
           }
-          // === Посещённые комнаты ===
           else if (completedCoords.has(posKey)) {
             cssClasses.push('completed');
           }
-          // === Не посещённые ===
           else {
             cssClasses.push('room');
           }
 
-          // === ExtraRooms ===
-          let hasExtra = extraRoomsMap.hasOwnProperty(posKey);
           let extraInlineStyle = '';
-          if (hasExtra) {
+          if (extraRoomsMap[posKey]) {
             const extra = extraRoomsMap[posKey];
             let extraSymbol = 'E';
             if (extra.TypeId === 5 && extra.Data === 16220) {
@@ -504,20 +607,11 @@
             } else {
               tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
             }
-            if (displayText) {
-              displayText += `, ${extraSymbol}`;
-            } else {
-              displayText = extraSymbol;
-            }
+            displayText = extraSymbol;
           }
 
-          // === Добавляем "Ч" для описанных сокровищниц ===
           if (treasureDesc !== null) {
-            if (displayText) {
-              displayText += ', Ч';
-            } else {
-              displayText = 'Ч';
-            }
+            displayText = 'Ч';
             tooltipLines.push(treasureDesc);
           }
 
@@ -534,87 +628,17 @@
           const tooltip = tooltipLines.join('\n');
           const classStr = cssClasses.join(' ');
           const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
-          rowCells += `<div class="${classStr}" data-tooltip="${tooltip}"${styleAttr}>${displayText}</div>`;
+          rowCells += `<div class="${classStr}" data-tooltip="${tooltip.replace(/"/g, '&quot;')}"${styleAttr}>${displayText}</div>`;
         }
         rowCells += `<div class="axis-label y-label">${y}</div>`;
         mapRows += `<div style="display:contents;">${rowCells}</div>`;
       }
 
-      const legendHtml = `
-		<div class="legend-item">
-		  <div class="legend-color" style="border:5px solid #0000FF; background: transparent;"></div>
-		  <span>Текущая позиция</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="border:3px solid #FFA500; background: transparent;"></div>
-		  <span>Посещённые Боссы, Часовые и Ворота</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#FF4500;"></div>
-		  <span>Ворота(номер пары)</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#32CD32; color:#000;">Босс</div>
-		  <span>Босс</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#FFD700; color:#000;">Ч</div>
-		  <span>Часовой(страж сокровища)</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#87CEFA;"></div>
-		  <span>Посещённые комнаты</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#90EE90;"></div>
-		  <span>Посещённые комнаты с наградами</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#ffffff;"></div>
-		  <span>Не пройденные комнаты</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#DA70D6; color:#fff;">T</div>
-		  <span>Телепорт</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#aaa; color:#000;">Б</div>
-		  <span>Брелоки (без факела)</span>
-		</div>
-		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#FFD700; color:#000;">С</div>
-		  <span>Сокровищница (ExtraRoom)</span>
-		</div>
-      `;
-
-      const stats = `
-        <p>
-          Пройдено: ${completedCoords.size} | 
-          Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
-          Боссов: ${Object.keys(bossRooms).length} | 
-          Ворот: ${Object.keys(gatePairs).length} 
-        </p>
-        <p><strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong></p>
-      `;
-
-      return `
-        ${stats}
-        <div class="map-legend-container">
-          <div class="map-grid-container">
-            <div class="map-grid">
-              <div class="axis-label"></div>
-              ${axisLabels}
-              <div class="axis-label"></div>
-              ${mapRows}
-              <div class="axis-label"></div>
-              ${axisLabels}
-              <div class="axis-label"></div>
-            </div>
-          </div>
-          <div class="legend">
-            ${legendHtml}
-          </div>
-        </div>
+      const empty = '<div class="axis-label"></div>';
+      document.getElementById('mapGrid').innerHTML = `
+        ${empty}${axisLabels}${empty}
+        ${mapRows}
+        ${empty}${axisLabels}${empty}
       `;
     }
 
@@ -628,20 +652,6 @@
       document.getElementById('errorBox').style.display = 'none';
     }
 
-    async function processData(jsonData) {
-      // Убедимся, что описания загружены
-      await loadDescriptionsIfNeeded();
-      try {
-        const data = parseMapData(jsonData);
-        const html = renderMap(data);
-        document.getElementById('mapContainer').innerHTML = html;
-        hideError();
-      } catch (e) {
-        showError(e.message || String(e));
-      }
-    }
-
-    // Глобальный флаг, чтобы не грузить info.json много раз
     let descriptionsLoaded = false;
     async function loadDescriptionsIfNeeded() {
       if (!descriptionsLoaded) {
@@ -650,10 +660,18 @@
       }
     }
 
-    // ======================
-    // 🖱️ Обработчики событий
-    // ======================
+    async function processData(jsonData) {
+      await loadDescriptionsIfNeeded();
+      try {
+        const data = parseMapData(jsonData);
+        renderMap(data);
+        hideError();
+      } catch (e) {
+        showError("Ошибка обработки данных: " + (e.message || e));
+      }
+    }
 
+    // Event Listeners
     document.getElementById('fileInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -667,28 +685,23 @@
     });
 
     const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
+      dropZone.addEventListener(eventName, e => {
         e.preventDefault();
         e.stopPropagation();
       });
     });
-
     ['dragenter', 'dragover'].forEach(eventName => {
       dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
     });
-
     ['dragleave', 'drop'].forEach(eventName => {
       dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
     });
-
     dropZone.addEventListener('drop', (e) => {
       const files = e.dataTransfer.files;
       if (files.length) {
-        fileInput.files = files;
-        fileInput.dispatchEvent(new Event('change'));
+        document.getElementById('fileInput').files = files;
+        document.getElementById('fileInput').dispatchEvent(new Event('change'));
       }
     });
 
@@ -706,8 +719,9 @@
       }
     });
 
-    // Загружаем описания при запуске (опционально, но полезно)
     loadDescriptionsIfNeeded();
+    // Загрузить карту по умолчанию
+    document.getElementById('submitTextBtn').click();
   </script>
 </body>
 </html>
