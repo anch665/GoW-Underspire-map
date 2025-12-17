@@ -92,14 +92,14 @@
 	#jsonTextarea {
 	  flex: 1;
 	  width: 100%;
-	  min-height: 530px; /* минимальная высота на случай, если flex не сработает */
+	  min-height: 530px;
 	  background: #1e1e1e;
 	  color: #0f0;
 	  border: 1px solid #444;
 	  border-radius: 4px;
 	  padding: 8px;
 	  font-family: monospace;
-	  resize: vertical; /* можно тянуть вниз, но не обязательно */
+	  resize: vertical;
 	  font-size: 12px;
 	  box-sizing: border-box;
 	}
@@ -128,7 +128,7 @@
       background: #2d2d2d;
       padding: 10px;
       border-radius: 6px;
-      max-width: 1400px; /* ширина под карту */
+      max-width: 1400px;
     }
     .stats strong {
       color: #fff;
@@ -509,6 +509,11 @@
       };
     }
 
+    function formatRoomIdAsYYXX(num) {
+      const s = String(num).padStart(4, '0');
+      return `${s.slice(0,2)}:${s.slice(2,4)}`;
+    }
+
     function renderMap(data) {
       const {
         mapData, completedCoords, treasureRooms, bossRooms, gateCells, gatePairs,
@@ -601,9 +606,17 @@
               extraSymbol = 'Б';
               tooltipLines.push('Брелоки (без факела)');
             } else if (extra.TypeId === 1) {
+              // Телепорт
               extraSymbol = 'T';
-              tooltipLines.push(`Телепорт → ${extra.Data || '—'}`);
+              const dest = formatRoomIdAsYYXX(extra.Data);
+              tooltipLines.push(`Телепорт → ${dest}`);
               extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
+            } else if (extra.TypeId === 0) {
+              // Оракул
+              extraSymbol = 'O';
+              const dest = formatRoomIdAsYYXX(extra.Data);
+              tooltipLines.push(`Оракул → ${dest}`);
+              extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
             } else {
               tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
             }
