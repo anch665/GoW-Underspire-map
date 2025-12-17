@@ -546,8 +546,8 @@
 		  <span>Текущая позиция</span>
 		</div>
 		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#90EE90;"></div>
-		  <span>Посещённые комнаты с наградами</span>
+		  <div class="legend-color" style="border:3px solid #FFA500; background: transparent;"></div>
+		  <span>Посещённые Боссы, Часовые и Ворота</span>
 		</div>
 		<div class="legend-item">
 		  <div class="legend-color" style="background-color:#FF4500;"></div>
@@ -566,12 +566,12 @@
 		  <span>Посещённые комнаты</span>
 		</div>
 		<div class="legend-item">
-		  <div class="legend-color" style="background-color:#ffffff;"></div>
-		  <span>Не пройденные комнаты</span>
+		  <div class="legend-color" style="background-color:#90EE90;"></div>
+		  <span>Посещённые комнаты с наградами</span>
 		</div>
 		<div class="legend-item">
-		  <div class="legend-color" style="border:3px solid #FFA500; background: transparent;"></div>
-		  <span>Посещённые Боссы, Часовые и Ворота</span>
+		  <div class="legend-color" style="background-color:#ffffff;"></div>
+		  <span>Не пройденные комнаты</span>
 		</div>
 		<div class="legend-item">
 		  <div class="legend-color" style="background-color:#DA70D6; color:#fff;">T</div>
@@ -590,7 +590,7 @@
       const stats = `
         <p>
           Пройдено: ${completedCoords.size} | 
-          Чаовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
+          Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
           Боссов: ${Object.keys(bossRooms).length} | 
           Ворот: ${Object.keys(gatePairs).length} 
         </p>
