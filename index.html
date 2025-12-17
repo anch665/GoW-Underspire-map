@@ -410,13 +410,29 @@
     let TreasureInfo = {};
     let BossInfo = {};
 
+    // Обработка строк: заменяем запятые и \n на \n для tooltip
+    function normalizeDescription(str) {
+      if (typeof str !== 'string') return '';
+      return str.replace(/,/g, '\n').replace(/\\n/g, '\n').trim();
+    }
+
     async function loadDescriptions() {
       try {
         const response = await fetch('info.json');
         if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
         const data = await response.json();
-        TreasureInfo = data.TreasureInfo || {};
-        BossInfo = data.BossInfo || {};
+        TreasureInfo = {};
+        BossInfo = {};
+        if (data.TreasureInfo) {
+          for (const key in data.TreasureInfo) {
+            TreasureInfo[key] = normalizeDescription(data.TreasureInfo[key]);
+          }
+        }
+        if (data.BossInfo) {
+          for (const key in data.BossInfo) {
+            BossInfo[key] = normalizeDescription(data.BossInfo[key]);
+          }
+        }
       } catch (err) {
         console.warn('Не удалось загрузить info.json:', err);
       }
@@ -562,39 +578,77 @@
           const cellValue = mapData[y][x];
           const posKey = `${y},${x}`;
           let cssClasses = ['cell'];
-          let displayText = '';
+          let displayTextParts = [];
+          let tooltipLines = [];
           let isSpecial = false;
-          let tooltipLines = []; // ← УБРАНО: ID из подсказки
 
-          let treasureDesc = null;
+          // === 1. Обработка ворот (всегда первые) ===
+          if (gateCells[posKey] !== undefined) {
+            const gid = gateCells[posKey];
+            const gateNumber = String(Number(gid) + 1);
+            displayTextParts.push(gateNumber);
+            tooltipLines.push(`Ворота ${gateNumber}`);
+            cssClasses.push('gate');
+            isSpecial = true;
+          }
+
+          // === 2. Обработка сокровищ и боссов ===
           if (treasureRooms[posKey] !== undefined) {
             const treasureId = String(treasureRooms[posKey]);
-            cssClasses.push('treasure');
+            displayTextParts.push('Ч');
             isSpecial = true;
             if (TreasureInfo[treasureId]) {
-              treasureDesc = TreasureInfo[treasureId];
+              tooltipLines.push(TreasureInfo[treasureId]);
             } else {
-              displayText = treasureId;
+              tooltipLines.push(`Часовой ID ${treasureId}`);
             }
+            cssClasses.push('treasure');
           }
           else if (bossRooms[posKey] !== undefined) {
             const bossId = String(bossRooms[posKey]);
-            cssClasses.push('boss');
+            displayTextParts.push('Босс');
             isSpecial = true;
             if (BossInfo[bossId]) {
-              displayText = 'Босс';
               tooltipLines.push(BossInfo[bossId]);
             } else {
-              displayText = bossId;
+              tooltipLines.push(`Босс ID ${bossId}`);
+            }
+            cssClasses.push('boss');
+          }
+
+          // === 3. Обработка ExtraRooms ===
+          let extraInlineStyle = '';
+          if (extraRoomsMap[posKey]) {
+            const extra = extraRoomsMap[posKey];
+            if (extra.TypeId === 5 && extra.Data === 16220) {
+              displayTextParts.push('С');
+              tooltipLines.push('Сокровищница');
+            } else if (extra.TypeId === 2) {
+              displayTextParts.push('Б');
+              tooltipLines.push('Безделушки (без факела)');
+            } else if (extra.TypeId === 4) {
+              displayTextParts.push('Бо');
+              tooltipLines.push('Бочка (без факела)');
+              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
+            } else if (extra.TypeId === 1) {
+              displayTextParts.push('T');
+              const dest = formatRoomIdAsYYXX(extra.Data);
+              tooltipLines.push(`Телепорт в ${dest}`);
+              extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
+            } else if (extra.TypeId === 0) {
+              displayTextParts.push('O');
+              const dest = formatRoomIdAsYYXX(extra.Data);
+              tooltipLines.push(`Оракул в ${dest}`);
+              extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
+            } else {
+              // Неизвестный TypeId — добавляем в подсказку
+              tooltipLines.push(`TypeId=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
+              displayTextParts.push('E');
             }
           }
-          else if (gateCells[posKey] !== undefined) {
-            const gid = gateCells[posKey];
-            cssClasses.push('gate');
-            displayText = String(Number(gid) + 1);
-            isSpecial = true;
-          }
-          else if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
+
+          // === 4. Общий фон ===
+          if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
             cssClasses.push('collected-generic');
           }
           else if (cellValue === 15) {
@@ -603,47 +657,11 @@
           else if (completedCoords.has(posKey)) {
             cssClasses.push('completed');
           }
-          else {
+          else if (!isSpecial) {
             cssClasses.push('room');
           }
 
-          let extraInlineStyle = '';
-          if (extraRoomsMap[posKey]) {
-            const extra = extraRoomsMap[posKey];
-            let extraSymbol = 'E';
-            if (extra.TypeId === 5 && extra.Data === 16220) {
-              extraSymbol = 'С';
-              tooltipLines.push('Сокровищница');
-            } else if (extra.TypeId === 2) {
-              extraSymbol = 'Б';
-              tooltipLines.push('Безделушки (без факела)');
-            } else if (extra.TypeId === 4) {
-              extraSymbol = 'Бо';
-              tooltipLines.push('Бочка (без факела)');
-              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
-            } else if (extra.TypeId === 1) {
-              // Телепорт
-              extraSymbol = 'T';
-              const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Телепорт в ${dest}`);
-              extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
-            } else if (extra.TypeId === 0) {
-              // Оракул
-              extraSymbol = 'O';
-              const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Оракул в ${dest}`);
-              extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
-            } else {
-              tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
-            }
-            displayText = extraSymbol;
-          }
-
-          if (treasureDesc !== null) {
-            displayText = 'Ч';
-            tooltipLines.push(treasureDesc);
-          }
-
+          // === 5. Специальные состояния ===
           if (isSpecial && completedCoords.has(posKey)) {
             cssClasses.push('special-completed');
           }
@@ -654,6 +672,8 @@
             cssClasses.push('special-completed');
           }
 
+          // === 6. Формируем отображение и подсказку ===
+          const displayText = displayTextParts.join(', '); // ← Через запятую
           const tooltip = tooltipLines.join('\n');
           const classStr = cssClasses.join(' ');
           const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
@@ -749,7 +769,6 @@
     });
 
     loadDescriptionsIfNeeded();
-    // Загрузить карту по умолчанию
     document.getElementById('submitTextBtn').click();
   </script>
 </body>
