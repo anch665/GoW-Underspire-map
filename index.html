@@ -288,6 +288,10 @@
       background-color: #DA70D6;
       color: #fff;
     }
+    .legend-color.oracle-bg {
+      background-color: #8A2BE2;
+      color: #fff;
+    }
     .legend-color.gray-bg {
       background-color: #aaa;
       color: #000;
@@ -369,6 +373,10 @@
             <span>Телепорт</span>
           </div>
           <div class="legend-item">
+            <div class="legend-color oracle-bg">О</div>
+            <span>Оракул</span>
+          </div>
+          <div class="legend-item">
             <div class="legend-color lightblue-bg"></div>
             <span>Посещённые комнаты</span>
           </div>
@@ -382,11 +390,15 @@
           </div>
           <div class="legend-item">
             <div class="legend-color white-bg">Б</div>
-            <span>Брелоки (без факела)</span>
+            <span>Безделушки<br>(без факела)</span>
           </div>
           <div class="legend-item">
             <div class="legend-color white-bg">С</div>
-            <span>Сокровищница (ExtraRoom)</span>
+            <span>Сокровищница</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color white-bg">Бо</div>
+            <span>Бочка<br>(без факела)</span>
           </div>
         </div>
 		
@@ -552,7 +564,7 @@
           let cssClasses = ['cell'];
           let displayText = '';
           let isSpecial = false;
-          let tooltipLines = [`ID: ${cellValue}`];
+          let tooltipLines = []; // ← УБРАНО: ID из подсказки
 
           let treasureDesc = null;
           if (treasureRooms[posKey] !== undefined) {
@@ -604,18 +616,22 @@
               tooltipLines.push('Сокровищница');
             } else if (extra.TypeId === 2) {
               extraSymbol = 'Б';
-              tooltipLines.push('Брелоки (без факела)');
+              tooltipLines.push('Безделушкки<br>(без факела)');
+            } else if (extra.TypeId === 4) {
+              extraSymbol = 'Бо';
+              tooltipLines.push('Бочка (без факела)');
+              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
             } else if (extra.TypeId === 1) {
               // Телепорт
               extraSymbol = 'T';
               const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Телепорт → ${dest}`);
+              tooltipLines.push(`Телепорт в ${dest}`);
               extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
             } else if (extra.TypeId === 0) {
               // Оракул
               extraSymbol = 'O';
               const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Оракул → ${dest}`);
+              tooltipLines.push(`Оракул в ${dest}`);
               extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
             } else {
               tooltipLines.push(`Extra: Type=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
