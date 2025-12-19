@@ -623,13 +623,17 @@
             if (extra.TypeId === 5 && extra.Data === 16220) {
               displayTextParts.push('С');
               tooltipLines.push('Сокровищница');
-            } else if (extra.TypeId === 2) {
-              displayTextParts.push('Б');
-              tooltipLines.push('Безделушки (без факела)');
             } else if (extra.TypeId === 4) {
+              displayTextParts.push('Ш');
+              tooltipLines.push('Проклятая шахта (без факела)');
+              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
+            } else if (extra.TypeId === 3) {
               displayTextParts.push('Бо');
               tooltipLines.push('Бочка (без факела)');
               extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
+            } else if (extra.TypeId === 2) {
+              displayTextParts.push('Б');
+              tooltipLines.push('Безделушки (без факела)');
             } else if (extra.TypeId === 1) {
               displayTextParts.push('T');
               const dest = formatRoomIdAsYYXX(extra.Data);
