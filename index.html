@@ -406,374 +406,410 @@
     </div>
   </div>
 
-  <script>
-    let TreasureInfo = {};
-    let BossInfo = {};
+<script>
+  let TreasureInfo = {};
+  let BossInfo = {};
 
-    // Обработка строк: заменяем запятые и \n на \n для tooltip
-    function normalizeDescription(str) {
-      if (typeof str !== 'string') return '';
-      return str.replace(/,/g, '\n').replace(/\\n/g, '\n').trim();
+  function normalizeDescription(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/,/g, '\n').replace(/\\n/g, '\n').trim();
+  }
+
+  async function loadDescriptions() {
+    try {
+      const response = await fetch('info.json');
+      if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
+      const data = await response.json();
+      TreasureInfo = {};
+      BossInfo = {};
+      if (data.TreasureInfo) {
+        for (const key in data.TreasureInfo) {
+          TreasureInfo[key] = normalizeDescription(data.TreasureInfo[key]);
+        }
+      }
+      if (data.BossInfo) {
+        for (const key in data.BossInfo) {
+          BossInfo[key] = normalizeDescription(data.BossInfo[key]);
+        }
+      }
+    } catch (err) {
+      console.warn('Не удалось загрузить info.json:', err);
+    }
+  }
+
+  function _parsePosition(roomId) {
+    const s = String(roomId).padStart(4, '0');
+    if (s.length !== 4) return null;
+    const y = parseInt(s.slice(0, 2), 10);
+    const x = parseInt(s.slice(2), 10);
+    if (y >= 0 && y < 20 && x >= 0 && x < 20) return [y, x];
+    return null;
+  }
+
+  function _parseRoomsDict(roomDict) {
+    const result = {};
+    for (const [coordKey, roomId] of Object.entries(roomDict)) {
+      const pos = _parsePosition(coordKey);
+      if (pos) result[pos.join(',')] = roomId;
+    }
+    return result;
+  }
+
+  function parseMapData(dataJson) {
+    const { result } = dataJson;
+    const mapData = result.Info.UnderspireData.Map;
+    const completedIds = result.Info.UnderspireData.Completed || [];
+    const collectedRaw = result.Info.UnderspireData.Collected || [];
+    const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
+    const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
+    const gatesInfo = result.Info.UnderspireData.Gates || {};
+    const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
+    const current_node = result.Info.UnderspireData.CurrentNode;
+
+    const currentPos = _parsePosition(current_node);
+
+    // === Все посещённые ИЛИ собранные клетки ===
+    const visitedCoords = new Set();
+    for (const id of [...completedIds, ...collectedRaw]) {
+      const num = Number(id);
+      if (!isNaN(num) && num >= 0 && num <= 1919) {
+        const pos = _parsePosition(num);
+        if (pos) visitedCoords.add(pos.join(','));
+      }
     }
 
-    async function loadDescriptions() {
-      try {
-        const response = await fetch('info.json');
-        if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
-        const data = await response.json();
-        TreasureInfo = {};
-        BossInfo = {};
-        if (data.TreasureInfo) {
-          for (const key in data.TreasureInfo) {
-            TreasureInfo[key] = normalizeDescription(data.TreasureInfo[key]);
-          }
+    const treasureRooms = _parseRoomsDict(treasureInfo);
+    const bossRooms = _parseRoomsDict(bossInfo);
+
+    const collectedTreasureCoords = new Set();
+    for (const id of collectedRaw) {
+      const num = Number(id);
+      if (!isNaN(num) && num >= 0 && num <= 1919) {
+        const pos = _parsePosition(num);
+        if (pos && treasureRooms[pos.join(',')] !== undefined) {
+          collectedTreasureCoords.add(pos.join(','));
         }
-        if (data.BossInfo) {
-          for (const key in data.BossInfo) {
-            BossInfo[key] = normalizeDescription(data.BossInfo[key]);
-          }
-        }
-      } catch (err) {
-        console.warn('Не удалось загрузить info.json:', err);
       }
     }
 
-    function _parsePosition(roomId) {
-      const s = String(roomId).padStart(4, '0');
-      if (s.length !== 4) return null;
-      const y = parseInt(s.slice(0, 2), 10);
-      const x = parseInt(s.slice(2), 10);
-      if (y >= 0 && y < 20 && x >= 0 && x < 20) return [y, x];
-      return null;
+    const gateCells = {};
+    const gatePairs = {};
+    for (const [gateId, gateData] of Object.entries(gatesInfo)) {
+      const node = gateData.Node;
+      const direction = gateData.Dir;
+      const basePos = _parsePosition(node);
+      if (!basePos) continue;
+
+      const [y, x] = basePos;
+      let cells;
+      if (direction === 1) cells = [[y, x], [y, x + 1]];
+      else if (direction === 3) cells = [[y, x], [y, x - 1]];
+      else if (direction === 0) cells = [[y, x], [y - 1, x]];
+      else if (direction === 2) cells = [[y, x], [y + 1, x]];
+      else continue;
+
+      if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
+        gatePairs[gateId] = cells;
+        for (const cell of cells) {
+          gateCells[cell.join(',')] = gateId;
+        }
+      }
     }
 
-    function _parseRoomsDict(roomDict) {
-      const result = {};
-      for (const [coordKey, roomId] of Object.entries(roomDict)) {
-        const pos = _parsePosition(coordKey);
-        if (pos) result[pos.join(',')] = roomId;
+    const extraRoomsMap = {};
+    for (const er of extraRooms) {
+      const roomId = er.RoomId;
+      const pos = _parsePosition(roomId);
+      if (pos) {
+        const key = pos.join(',');
+        extraRoomsMap[key] = { TypeId: er.TypeId, Data: er.Data !== undefined ? er.Data : null };
       }
-      return result;
     }
 
-    function parseMapData(dataJson) {
-      const { result } = dataJson;
-      const mapData = result.Info.UnderspireData.Map;
-      const completedIds = result.Info.UnderspireData.Completed || [];
-      const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
-      const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
-      const gatesInfo = result.Info.UnderspireData.Gates || {};
-      const collectedRaw = result.Info.UnderspireData.Collected || [];
-      const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
-      const current_node = result.Info.UnderspireData.CurrentNode;
+    // === Все игровые клетки (для подсчёта totalRooms) ===
+    const allGameCoords = new Set();
 
-      const currentPos = _parsePosition(current_node);
-
-      const completedCoords = new Set();
-      for (const id of completedIds) {
-        const num = Number(id);
-        if (!isNaN(num) && num >= 0 && num <= 1919) {
-          const pos = _parsePosition(num);
-          if (pos) completedCoords.add(pos.join(','));
+    // 1. Обычные комнаты (Map != 15)
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        if (mapData[y][x] !== 15) {
+          allGameCoords.add(`${y},${x}`);
         }
       }
-
-      const treasureRooms = _parseRoomsDict(treasureInfo);
-      const bossRooms = _parseRoomsDict(bossInfo);
-
-      const collectedCoords = new Set();
-      for (const id of collectedRaw) {
-        const num = Number(id);
-        if (!isNaN(num) && num >= 0 && num <= 1919) {
-          const pos = _parsePosition(num);
-          if (pos) collectedCoords.add(pos.join(','));
-        }
-      }
-
-      const collectedTreasureCoords = new Set(Object.keys(treasureRooms).filter(key => collectedCoords.has(key)));
-
-      const gateCells = {};
-      const gatePairs = {};
-      for (const [gateId, gateData] of Object.entries(gatesInfo)) {
-        const node = gateData.Node;
-        const direction = gateData.Dir;
-        const basePos = _parsePosition(node);
-        if (!basePos) continue;
-
-        const [y, x] = basePos;
-        let cells;
-        if (direction === 1) cells = [[y, x], [y, x + 1]];
-        else if (direction === 3) cells = [[y, x], [y, x - 1]];
-        else if (direction === 0) cells = [[y, x], [y - 1, x]];
-        else if (direction === 2) cells = [[y, x], [y + 1, x]];
-        else continue;
-
-        if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
-          gatePairs[gateId] = cells;
-          for (const cell of cells) {
-            gateCells[cell.join(',')] = gateId;
-          }
-        }
-      }
-
-      const extraRoomsMap = {};
-      for (const er of extraRooms) {
-        const roomId = er.RoomId;
-        const pos = _parsePosition(roomId);
-        if (pos) {
-          const key = pos.join(',');
-          extraRoomsMap[key] = { TypeId: er.TypeId, Data: er.Data !== undefined ? er.Data : null };
-        }
-      }
-
-      const specialCoords = new Set();
-      Object.values(gatePairs).forEach(cells => cells.forEach(([y, x]) => specialCoords.add(`${y},${x}`)));
-      Object.keys(treasureRooms).forEach(key => specialCoords.add(key));
-      Object.keys(bossRooms).forEach(key => specialCoords.add(key));
-
-      return {
-        mapData, completedCoords, treasureRooms, bossRooms, gateCells, gatePairs,
-        collectedCoords, collectedTreasureCoords, currentPos, specialCoords, extraRoomsMap
-      };
     }
 
-    function formatRoomIdAsYYXX(num) {
-      const s = String(num).padStart(4, '0');
-      return `${s.slice(0,2)}:${s.slice(2,4)}`;
-    }
+    // 2. Gates
+    Object.values(gatePairs).forEach(cells => {
+      cells.forEach(([y, x]) => allGameCoords.add(`${y},${x}`));
+    });
 
-    function renderMap(data) {
-      const {
-        mapData, completedCoords, treasureRooms, bossRooms, gateCells, gatePairs,
-        collectedCoords, collectedTreasureCoords, currentPos, specialCoords, extraRoomsMap
-      } = data;
+    // 3. TreasureRoomInfo
+    Object.keys(treasureRooms).forEach(key => allGameCoords.add(key));
 
-      const rows = 20, cols = 20;
+    // 4. BossRoomInfo
+    Object.keys(bossRooms).forEach(key => allGameCoords.add(key));
 
-      let totalRooms = 0, remainingRooms = 0;
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          if (mapData[y][x] !== 15) {
-            totalRooms++;
-            if (!completedCoords.has(`${y},${x}`)) remainingRooms++;
-          }
+    // 5. ExtraRooms
+    Object.keys(extraRoomsMap).forEach(key => allGameCoords.add(key));
+
+    return {
+      mapData,
+      visitedCoords,
+      allGameCoords,
+      treasureRooms,
+      bossRooms,
+      gateCells,
+      gatePairs,
+      collectedTreasureCoords,
+      currentPos,
+      extraRoomsMap
+    };
+  }
+
+  function formatRoomIdAsYYXX(num) {
+    const s = String(num).padStart(4, '0');
+    return `${s.slice(0,2)}:${s.slice(2,4)}`;
+  }
+
+  function renderMap(data) {
+    const {
+      mapData,
+      visitedCoords,
+      allGameCoords,
+      treasureRooms,
+      bossRooms,
+      gateCells,
+      gatePairs,
+      collectedTreasureCoords,
+      currentPos,
+      extraRoomsMap
+    } = data;
+
+    const totalRooms = allGameCoords.size;
+    const remainingRooms = totalRooms - visitedCoords.size;
+
+    document.getElementById('mapStats').style.display = 'block';
+    document.getElementById('mapStats').innerHTML = `
+      Пройдено/Собрано: ${visitedCoords.size} | 
+      Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
+      Боссов: ${Object.keys(bossRooms).length} | 
+      Ворот: ${Object.keys(gatePairs).length}<br>
+      <strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong>
+    `;
+
+    const axisLabels = Array.from({length: 20}, (_, x) => `<div class="axis-label">${x}</div>`).join('');
+    let mapRows = '';
+
+    for (let y = 0; y < 20; y++) {
+      let rowCells = `<div class="axis-label y-label">${y}</div>`;
+      for (let x = 0; x < 20; x++) {
+        const cellValue = mapData[y][x];
+        const posKey = `${y},${x}`;
+        let cssClasses = ['cell'];
+        let displayTextParts = [];
+        let tooltipLines = [];
+        let isSpecial = false;
+        let customBgColor = null;
+
+        // === 1. Gates ===
+        if (gateCells[posKey] !== undefined) {
+          const gid = gateCells[posKey];
+          const gateNumber = String(Number(gid) + 1);
+          displayTextParts.push(gateNumber);
+          tooltipLines.push(`Ворота ${gateNumber}`);
+          cssClasses.push('gate');
+          isSpecial = true;
         }
-      }
 
-      document.getElementById('mapStats').style.display = 'block';
-      document.getElementById('mapStats').innerHTML = `
-        Пройдено: ${completedCoords.size} | 
-        Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
-        Боссов: ${Object.keys(bossRooms).length} | 
-        Ворот: ${Object.keys(gatePairs).length}<br>
-        <strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong>
-      `;
-
-      const axisLabels = Array.from({length: cols}, (_, x) => `<div class="axis-label">${x}</div>`).join('');
-      let mapRows = '';
-
-      for (let y = 0; y < rows; y++) {
-        let rowCells = `<div class="axis-label y-label">${y}</div>`;
-        for (let x = 0; x < cols; x++) {
-          const cellValue = mapData[y][x];
-          const posKey = `${y},${x}`;
-          let cssClasses = ['cell'];
-          let displayTextParts = [];
-          let tooltipLines = [];
-          let isSpecial = false;
-
-          // === 1. Обработка ворот (всегда первые) ===
-          if (gateCells[posKey] !== undefined) {
-            const gid = gateCells[posKey];
-            const gateNumber = String(Number(gid) + 1);
-            displayTextParts.push(gateNumber);
-            tooltipLines.push(`Ворота ${gateNumber}`);
-            cssClasses.push('gate');
+        // === 2. ExtraRooms ===
+        let extraInlineStyle = '';
+        if (extraRoomsMap[posKey]) {
+          const extra = extraRoomsMap[posKey];
+          if (extra.TypeId === 5 && extra.Data === 16220) {
+            displayTextParts.push('С');
+            tooltipLines.push('Сокровищница');
             isSpecial = true;
-          }
-
-          // === 2. Обработка сокровищ и боссов ===
-          if (treasureRooms[posKey] !== undefined) {
-            const treasureId = String(treasureRooms[posKey]);
-            displayTextParts.push('Ч');
+            if (visitedCoords.has(posKey)) {
+              customBgColor = '#FFFF00'; // жёлтый
+            }
+          } else if (extra.TypeId === 2) {
+            displayTextParts.push('Б');
+            tooltipLines.push('Безделушки (без факела)');
             isSpecial = true;
-            if (TreasureInfo[treasureId]) {
-              tooltipLines.push(TreasureInfo[treasureId]);
-            } else {
-              tooltipLines.push(`Часовой ID ${treasureId}`);
+            if (visitedCoords.has(posKey)) {
+              customBgColor = '#90EE90'; // светло-зелёный
             }
-            cssClasses.push('treasure');
+          } else if (extra.TypeId === 4) {
+            displayTextParts.push('Ш');
+            tooltipLines.push('Проклятая шахта (без факела)');
+            extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
+          } else if (extra.TypeId === 3) {
+            displayTextParts.push('Бо');
+            tooltipLines.push('Бочка (без факела)');
+            extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
+          } else if (extra.TypeId === 1) {
+            displayTextParts.push('T');
+            const dest = formatRoomIdAsYYXX(extra.Data);
+            tooltipLines.push(`Телепорт в ${dest}`);
+            extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
+          } else if (extra.TypeId === 0) {
+            displayTextParts.push('O');
+            const dest = formatRoomIdAsYYXX(extra.Data);
+            tooltipLines.push(`Оракул в ${dest}`);
+            extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
+          } else {
+            tooltipLines.push(`TypeId=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
+            displayTextParts.push('E');
           }
-          else if (bossRooms[posKey] !== undefined) {
-            const bossId = String(bossRooms[posKey]);
-            displayTextParts.push('Босс');
-            isSpecial = true;
-            if (BossInfo[bossId]) {
-              tooltipLines.push(BossInfo[bossId]);
-            } else {
-              tooltipLines.push(`Босс ID ${bossId}`);
-            }
-            cssClasses.push('boss');
-          }
-
-          // === 3. Обработка ExtraRooms ===
-          let extraInlineStyle = '';
-          if (extraRoomsMap[posKey]) {
-            const extra = extraRoomsMap[posKey];
-            if (extra.TypeId === 5 && extra.Data === 16220) {
-              displayTextParts.push('С');
-              tooltipLines.push('Сокровищница');
-            } else if (extra.TypeId === 4) {
-              displayTextParts.push('Ш');
-              tooltipLines.push('Проклятая шахта (без факела)');
-              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
-            } else if (extra.TypeId === 3) {
-              displayTextParts.push('Бо');
-              tooltipLines.push('Бочка (без факела)');
-              extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
-            } else if (extra.TypeId === 2) {
-              displayTextParts.push('Б');
-              tooltipLines.push('Безделушки (без факела)');
-            } else if (extra.TypeId === 1) {
-              displayTextParts.push('T');
-              const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Телепорт в ${dest}`);
-              extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
-            } else if (extra.TypeId === 0) {
-              displayTextParts.push('O');
-              const dest = formatRoomIdAsYYXX(extra.Data);
-              tooltipLines.push(`Оракул в ${dest}`);
-              extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
-            } else {
-              // Неизвестный TypeId — добавляем в подсказку
-              tooltipLines.push(`TypeId=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
-              displayTextParts.push('E');
-            }
-          }
-
-          // === 4. Общий фон ===
-          if (collectedCoords.has(posKey) && !specialCoords.has(posKey)) {
-            cssClasses.push('collected-generic');
-          }
-          else if (cellValue === 15) {
-            cssClasses.push('empty');
-          }
-          else if (completedCoords.has(posKey)) {
-            cssClasses.push('completed');
-          }
-          else if (!isSpecial) {
-            cssClasses.push('room');
-          }
-
-          // === 5. Специальные состояния ===
-          if (isSpecial && completedCoords.has(posKey)) {
-            cssClasses.push('special-completed');
-          }
-          if (currentPos && currentPos[0] === y && currentPos[1] === x) {
-            cssClasses.push('current-location');
-          }
-          if (collectedTreasureCoords.has(posKey)) {
-            cssClasses.push('special-completed');
-          }
-
-          // === 6. Формируем отображение и подсказку ===
-          const displayText = displayTextParts.join(', '); // ← Через запятую
-          const tooltip = tooltipLines.join('\n');
-          const classStr = cssClasses.join(' ');
-          const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
-          rowCells += `<div class="${classStr}" data-tooltip="${tooltip.replace(/"/g, '&quot;')}"${styleAttr}>${displayText}</div>`;
         }
-        rowCells += `<div class="axis-label y-label">${y}</div>`;
-        mapRows += `<div style="display:contents;">${rowCells}</div>`;
-      }
 
-      const empty = '<div class="axis-label"></div>';
-      document.getElementById('mapGrid').innerHTML = `
-        ${empty}${axisLabels}${empty}
-        ${mapRows}
-        ${empty}${axisLabels}${empty}
-      `;
+        // === 3. Treasure & Boss ===
+        if (treasureRooms[posKey] !== undefined) {
+          const treasureId = String(treasureRooms[posKey]);
+          displayTextParts.push('Ч');
+          isSpecial = true;
+          if (TreasureInfo[treasureId]) {
+            tooltipLines.push(TreasureInfo[treasureId]);
+          } else {
+            tooltipLines.push(`Часовой ID ${treasureId}`);
+          }
+          cssClasses.push('treasure');
+        }
+        else if (bossRooms[posKey] !== undefined) {
+          const bossId = String(bossRooms[posKey]);
+          displayTextParts.push('Босс');
+          isSpecial = true;
+          if (BossInfo[bossId]) {
+            tooltipLines.push(BossInfo[bossId]);
+          } else {
+            tooltipLines.push(`Босс ID ${bossId}`);
+          }
+          cssClasses.push('boss');
+        }
+
+        // === 4. Фон ===
+        if (customBgColor) {
+          // Уже задан через ExtraRooms
+          extraInlineStyle = `background-color:${customBgColor} !important; color:#000;`;
+        }
+        else if (collectedTreasureCoords.has(posKey)) {
+          cssClasses.push('collected-generic');
+        }
+        else if (visitedCoords.has(posKey)) {
+          cssClasses.push('completed');
+        }
+        else if (cellValue === 15 && !extraRoomsMap[posKey] && gateCells[posKey] === undefined) {
+          cssClasses.push('empty');
+        }
+        else {
+          cssClasses.push('room');
+        }
+
+        // === 5. Рамки ===
+        if ((isSpecial || extraRoomsMap[posKey]) && visitedCoords.has(posKey)) {
+          cssClasses.push('special-completed');
+        }
+        if (currentPos && currentPos[0] === y && currentPos[1] === x) {
+          cssClasses.push('current-location');
+        }
+
+        // === 6. Ячейка ===
+        const displayText = displayTextParts.join(', ');
+        const tooltip = tooltipLines.join('\n');
+        const classStr = cssClasses.join(' ');
+        const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
+        rowCells += `<div class="${classStr}" data-tooltip="${tooltip.replace(/"/g, '&quot;')}"${styleAttr}>${displayText}</div>`;
+      }
+      rowCells += `<div class="axis-label y-label">${y}</div>`;
+      mapRows += `<div style="display:contents;">${rowCells}</div>`;
     }
 
-    function showError(msg) {
-      const el = document.getElementById('errorBox');
-      el.textContent = msg;
-      el.style.display = 'block';
+    const empty = '<div class="axis-label"></div>';
+    document.getElementById('mapGrid').innerHTML = `
+      ${empty}${axisLabels}${empty}
+      ${mapRows}
+      ${empty}${axisLabels}${empty}
+    `;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  let descriptionsLoaded = false;
+  async function loadDescriptionsIfNeeded() {
+    if (!descriptionsLoaded) {
+      await loadDescriptions();
+      descriptionsLoaded = true;
     }
+  }
 
-    function hideError() {
-      document.getElementById('errorBox').style.display = 'none';
+  async function processData(jsonData) {
+    await loadDescriptionsIfNeeded();
+    try {
+      const data = parseMapData(jsonData);
+      renderMap(data);
+      hideError();
+    } catch (e) {
+      showError("Ошибка обработки данных: " + (e.message || e));
     }
+  }
 
-    let descriptionsLoaded = false;
-    async function loadDescriptionsIfNeeded() {
-      if (!descriptionsLoaded) {
-        await loadDescriptions();
-        descriptionsLoaded = true;
-      }
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      await processData(json);
+    } catch (err) {
+      showError("Некорректный JSON-файл: " + (err.message || err));
     }
+  });
 
-    async function processData(jsonData) {
-      await loadDescriptionsIfNeeded();
-      try {
-        const data = parseMapData(jsonData);
-        renderMap(data);
-        hideError();
-      } catch (e) {
-        showError("Ошибка обработки данных: " + (e.message || e));
-      }
+  const dropZone = document.getElementById('dropZone');
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
+  });
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+  });
+  dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      document.getElementById('fileInput').files = files;
+      document.getElementById('fileInput').dispatchEvent(new Event('change'));
     }
+  });
 
-    // Event Listeners
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        await processData(json);
-      } catch (err) {
-        showError("Некорректный JSON-файл: " + (err.message || err));
-      }
-    });
+  document.getElementById('submitTextBtn').addEventListener('click', async () => {
+    const text = document.getElementById('jsonTextarea').value.trim();
+    if (!text) {
+      showError('Поле JSON пусто');
+      return;
+    }
+    try {
+      const json = JSON.parse(text);
+      await processData(json);
+    } catch (err) {
+      showError("Некорректный JSON: " + (err.message || err));
+    }
+  });
 
-    const dropZone = document.getElementById('dropZone');
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, e => {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    });
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
-    });
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
-    });
-    dropZone.addEventListener('drop', (e) => {
-      const files = e.dataTransfer.files;
-      if (files.length) {
-        document.getElementById('fileInput').files = files;
-        document.getElementById('fileInput').dispatchEvent(new Event('change'));
-      }
-    });
-
-    document.getElementById('submitTextBtn').addEventListener('click', async () => {
-      const text = document.getElementById('jsonTextarea').value.trim();
-      if (!text) {
-        showError('Поле JSON пусто');
-        return;
-      }
-      try {
-        const json = JSON.parse(text);
-        await processData(json);
-      } catch (err) {
-        showError("Некорректный JSON: " + (err.message || err));
-      }
-    });
-
-    loadDescriptionsIfNeeded();
-    document.getElementById('submitTextBtn').click();
-  </script>
+  loadDescriptionsIfNeeded();
+  document.getElementById('submitTextBtn').click();
+</script>
 </body>
 </html>
