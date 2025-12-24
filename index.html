@@ -764,15 +764,24 @@
   document.getElementById('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-      const text = await file.text();
-      const json = JSON.parse(text);
-	  document.getElementById('jsonTextarea').value = text;
-      await processData(json);
-    } catch (err) {
-      showError("Некорректный JSON-файл: " + (err.message || err));
-    }
-  });
+		try {
+			const text = await file.text().then(t => t.trim());
+			if (!text) {
+				showError("Файл пуст");
+				return;
+			}
+			// Парсим JSON, чтобы убедиться, что он валиден
+			const json = JSON.parse(text);
+			// Форматируем JSON красиво (с отступами)
+			const formattedJson = JSON.stringify(json, null, 2);
+			// Обновляем текстовое поле
+			document.getElementById('jsonTextarea').value = formattedJson;
+			// Обновляем отображение карты
+			await processData(json);
+		} catch (err) {
+			showError("Некорректный JSON-файл: " + (err.message || err));
+		}
+	});
 
   const dropZone = document.getElementById('dropZone');
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
