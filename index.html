@@ -804,19 +804,25 @@
     }
   });
 
-  document.getElementById('submitTextBtn').addEventListener('click', async () => {
-    const text = document.getElementById('jsonTextarea').value.trim();
-    if (!text) {
-      showError('Поле JSON пусто');
-      return;
-    }
-    try {
-      const json = JSON.parse(text);
-      await processData(json);
-    } catch (err) {
-      showError("Некорректный JSON: " + (err.message || err));
-    }
-  });
+	document.getElementById('submitTextBtn').addEventListener('click', async () => {
+		const textarea = document.getElementById('jsonTextarea');
+		const text = textarea.value.trim();
+		if (!text) {
+			showError('Поле JSON пусто');
+			return;
+		}
+		try {
+			// Парсим JSON для валидации
+			const json = JSON.parse(text);
+			// Форматируем и обновляем содержимое поля
+			const formattedJson = JSON.stringify(json, null, 2);
+			textarea.value = formattedJson;
+			// Обрабатываем данные и отображаем карту
+			await processData(json);
+		} catch (err) {
+			showError("Некорректный JSON: " + (err.message || err));
+		}
+	});
 
   loadDescriptionsIfNeeded();
   document.getElementById('submitTextBtn').click();
