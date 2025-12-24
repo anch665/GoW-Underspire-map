@@ -767,6 +767,7 @@
     try {
       const text = await file.text();
       const json = JSON.parse(text);
+	  document.getElementById('jsonTextarea').value = text;
       await processData(json);
     } catch (err) {
       showError("Некорректный JSON-файл: " + (err.message || err));
