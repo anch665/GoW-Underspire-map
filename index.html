@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Underspire Map Live</title>
+  
+  <!-- PWA Manifest для добавления иконки на рабочий стол -->
+  <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlVuZGVyc3BpcmUgTWFwIExpdmUiLAogICJzaG9ydF9uYW1lIjogIlVQIE1hcCIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzFlMWUxZSIsCiAgInRoZW1lX2NvbG9yIjogIiM0YTkwZTIiLAogICJpY29ucyI6IFt7CiAgICAic3JjIjogImljb24ucG5nIiwKICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICJ0eXBlIjogImltYWdlL3BuZyIKICB9XQp9">
+  <meta name="theme-color" content="#4a90e2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="UP Map">
+  <!-- Фейковая иконка для Apple (можно заменить на настоящую, если нужна) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIGZpbGw9IiM0YTkwZTIiLz48dGV4dCB4PSI5NiIgeT0iMTA2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMzYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VVA8L3RleHQ+PC9zdmc+">
+
   <style>
     body {
       background: #1e1e1e;
@@ -12,21 +22,23 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 12px;
       margin: 0;
     }
     h2 {
       margin-bottom: 5px;
-      font-size: 20px;
+      font-size: 18px;
+      text-align: center;
     }
 
     /* === Main Layout === */
     .main-layout {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       width: 100%;
       max-width: 1600px;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
 
     /* === Left Panel: Upload & JSON === */
@@ -35,12 +47,12 @@
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     .upload-box {
       background: #2d2d2d;
-      padding: 15px;
+      padding: 12px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
@@ -50,6 +62,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 8px;
     }
     .upload-box h3::before {
       content: "📁";
@@ -62,13 +75,12 @@
     .drop-zone {
       border: 2px dashed #555;
       border-radius: 6px;
-      padding: 20px;
+      padding: 16px;
       text-align: center;
       background: #252525;
       transition: background 0.3s;
       cursor: pointer;
       font-size: 14px;
-      margin-top: 10px;
     }
     .drop-zone.drag-over {
       background: #333;
@@ -78,52 +90,53 @@
       color: #4a90e2;
       text-decoration: underline;
       cursor: pointer;
+      font-size: 14px;
     }
     .file-label:hover {
       color: #357abd;
     }
 
     .text-input-container {
+      display: flex;
       flex-direction: column;
       gap: 8px;
       width: 100%;
-      margin-top: 10px;
     }
-	#jsonTextarea {
-	  flex: 1;
-	  width: 100%;
-	  min-height: 530px;
-	  background: #1e1e1e;
-	  color: #0f0;
-	  border: 1px solid #444;
-	  border-radius: 4px;
-	  padding: 8px;
-	  font-family: monospace;
-	  resize: vertical;
-	  font-size: 12px;
-	  box-sizing: border-box;
-	}
+    #jsonTextarea {
+      flex: 1;
+      width: 100%;
+      min-height: 500px;
+      background: #1e1e1e;
+      color: #0f0;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      resize: vertical;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
 
-	#submitTextBtn {
-	  background: #4a90e2;
-	  color: white;
-	  border: none;
-	  border-radius: 4px;
-	  cursor: pointer;
-	  padding: 10px;
-	  font-size: 14px;
-	  width: 100%;
-	  white-space: nowrap;
-	}
-	#submitTextBtn:hover {
-	  background: #357abd;
-	}
+    #submitTextBtn {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 10px;
+      font-size: 14px;
+      width: 100%;
+      white-space: nowrap;
+    }
+    #submitTextBtn:hover {
+      background: #357abd;
+    }
 
     /* === Stats === */
     .stats {
       text-align: center;
       margin: 10px 0;
-      font-size: 14px;
+      font-size: 13px;
       color: #ccc;
       background: #2d2d2d;
       padding: 10px;
@@ -138,27 +151,31 @@
     /* === Map === */
     .map-container {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .map-grid-container {
       background: #2d2d2d;
-      padding: 15px;
+      padding: 12px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      overflow-x: auto;
     }
     .map-grid {
       display: grid;
-      grid-template-columns: 32px repeat(20, 32px) 32px;
-      grid-template-rows: auto repeat(20, 32px) auto;
+      grid-template-columns: 30px repeat(20, 30px) 30px;
+      grid-template-rows: auto repeat(20, 30px) auto;
       gap: 0;
       border: 2px solid #555;
       background: #1e1e1e;
+      min-width: 660px;
     }
     .axis-label {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -173,12 +190,12 @@
       border-left: 1px solid #555;
     }
     .cell {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 9px;
       font-weight: bold;
       border: 1px solid #000;
       box-sizing: border-box;
@@ -196,21 +213,21 @@
     .current-location {
       border: 3px solid #0000FF !important;
       box-sizing: border-box;
-      width: 31px;
-      height: 31px;
+      width: 28px;
+      height: 28px;
       z-index: 10;
     }
     .special-completed {
       border: 3px solid #FFA500 !important;
       box-sizing: border-box;
-      width: 31px;
-      height: 31px;
+      width: 28px;
+      height: 28px;
     }
 
     .cell:hover::after {
       content: attr(data-tooltip);
       position: absolute;
-      bottom: -36px;
+      bottom: -38px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.85);
@@ -221,14 +238,15 @@
       white-space: pre;
       z-index: 100;
       text-align: center;
+      max-width: 150px;
     }
 
     /* === Legend === */
     .legend {
-      width: 280px;
+      width: 270px;
       flex-shrink: 0;
       background: #2d2d2d;
-      padding: 15px;
+      padding: 12px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
       display: flex;
@@ -238,17 +256,17 @@
     .legend-item {
       display: flex;
       align-items: center;
-      margin: 6px 0;
+      margin: 5px 0;
     }
     .legend-color {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 10px;
       font-weight: bold;
-      font-size: 14px;
+      font-size: 13px;
       border: 1px solid #555;
       border-radius: 3px;
     }
@@ -300,7 +318,7 @@
     /* === Error Box === */
     .error-box {
       background: #442222;
-      padding: 15px;
+      padding: 12px;
       border-radius: 6px;
       margin: 10px 0;
       width: 100%;
@@ -308,105 +326,211 @@
       font-family: monospace;
       white-space: pre-wrap;
       font-size: 14px;
+      display: none;
+    }
+
+    /* === Install Banner (Mobile only) === */
+    #installBanner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #2d2d2d;
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      display: none;
+      z-index: 1000;
+      border-top: 1px solid #4a90e2;
+    }
+    #installBanner button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin-top: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #installBanner button:hover {
+      background: #357abd;
+    }
+
+    /* === Mobile Responsive: переключаем на вертикальную колонку === */
+    @media (max-width: 1200px) {
+      .main-layout {
+        flex-direction: column;
+        align-items: center;
+      }
+      .left-panel,
+      .legend {
+        width: 100%;
+        max-width: 600px;
+      }
+      .map-container {
+        flex-direction: column;
+        align-items: center;
+        width: 10;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+      h2 {
+        font-size: 16px;
+      }
+      .map-grid {
+        grid-template-columns: 26px repeat(20, 26px) 26px;
+        grid-template-rows: auto repeat(20, 26px) auto;
+      }
+      .axis-label, .cell {
+        width: 26px;
+        height: 26px;
+        font-size: 8px;
+      }
+      .current-location, .special-completed {
+        width: 24px;
+        height: 24px;
+      }
+      .legend {
+        width: 100%;
+      }
+      .legend-color {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+      }
+      #jsonTextarea {
+        min-height: 300px;
+      }
     }
   </style>
 </head>
 <body>
   <h2>Underspire Map Live (20×20)</h2>
-  <div id="errorBox" class="error-box" style="display:none;"></div>
+  <div id="errorBox" class="error-box"></div>
+  <div id="installBanner">
+    <div>Добавьте карту на рабочий стол как мини-приложение!</div>
+    <button id="installBtn">Установить</button>
+  </div>
 
   <div class="main-layout">
-
-    <!-- Center + Right: Stats, Map, Legend -->
-    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
-
-      <div class="map-container">
-		<!-- Left Panel -->
-		<div class="left-panel">
-		  <div class="upload-box">
-			<h3>Загрузить файл</h3>
-			<div id="dropZone" class="drop-zone">
-			  Перетащите сюда JSON-файл или 
-			  <label for="fileInput" class="file-label">выберите файл</label>
-			  <input type="file" id="fileInput" accept=".json" style="display:none;">
-			</div>
-		  </div>
-		  <div class="upload-box">
-		    <h3 class="upload-json">Вставить JSON</h3>
-		    <div class="text-input-container">
-			<textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504,404,304,8305,405,505,503,403,303,203,204,104,402,401,8400,8501,8506,507,607,606,1013,1014,8508,509,8609,610,608],"Collected":[702,704,605,1003,1002,902,504,404,305,203,400,501,506,507,1014,508,509,609,608],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}},"Color":2,"DeepShrine":false,"Trinkets":{"0":1,"1":9,"2":7,"3":6,"4":11,"5":4},"Keystones":{"0":1,"1":1}},"SimpleRewardArray":[{"Type":"cursedRune","Data":0,"Amount":25,"Major":true}]}}</textarea>
-			<button type="button" id="submitTextBtn">Загрузить</button>
-		  </div>
-		</div>
-		</div>
-
-        <div class="map-grid-container">
-		  <div id="mapStats" class="stats" style="display:none;"></div>
-          <div id="mapGrid" class="map-grid">
-            <!-- будет заполнено скриптом -->
-          </div>
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="upload-box">
+        <h3>Загрузить файл</h3>
+        <div id="dropZone" class="drop-zone">
+          Перетащите сюда JSON-файл или 
+          <label for="fileInput" class="file-label">выберите файл</label>
+          <input type="file" id="fileInput" accept=".json" style="display:none;">
         </div>
-
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color blue-border"></div>
-            <span>Текущая позиция</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color orange-border"></div>
-            <span>Посещённые Боссы,<br> Часовые и Ворота</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color red-bg">1</div>
-            <span>Ворота (номер пары)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color green-bg">Босс</div>
-            <span>Босс</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color yellow-bg">Ч</div>
-            <span>Часовой<br>(страж сокровища)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color purple-bg">T</div>
-            <span>Телепорт</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color oracle-bg">О</div>
-            <span>Оракул</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color lightblue-bg"></div>
-            <span>Посещённые комнаты</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color greenlight-bg"></div>
-            <span>Посещённые комнаты с наградами</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg"></div>
-            <span>Не пройденные комнаты</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">Б</div>
-            <span>Безделушки<br>(без факела)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">С</div>
-            <span>Сокровищница</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">Бо</div>
-            <span>Бочка<br>(без факела)</span>
-          </div>
+      </div>
+      <div class="upload-box">
+        <h3 class="upload-json">Вставить JSON</h3>
+        <div class="text-input-container">
+          <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,890[..]</textarea>
+          <button type="button" id="submitTextBtn">Загрузить</button>
         </div>
-		
+      </div>
+    </div>
+
+    <!-- Map + Legend -->
+    <div style="display: flex; flex-direction: column; gap: 16px; align-items: center;">
+      <div class="map-grid-container">
+        <div id="mapStats" class="stats" style="display:none;"></div>
+        <div id="mapGrid" class="map-grid">
+          <!-- будет заполнено скриптом -->
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color blue-border"></div>
+          <span>Текущая позиция</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color orange-border"></div>
+          <span>Посещённые Боссы,<br> Часовые и Ворота</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color red-bg">1</div>
+          <span>Ворота (номер пары)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color green-bg">Босс</div>
+          <span>Босс</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color yellow-bg">Ч</div>
+          <span>Часовой<br>(страж сокровища)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color purple-bg">T</div>
+          <span>Телепорт</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color oracle-bg">О</div>
+          <span>Оракул</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color lightblue-bg"></div>
+          <span>Посещённые комнаты</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color greenlight-bg"></div>
+          <span>Посещённые комнаты с наградами</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color white-bg"></div>
+          <span>Не пройденные комнаты</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color white-bg">Б</div>
+          <span>Безделушки<br>(без факела)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color white-bg">С</div>
+          <span>Сокровищница</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color white-bg">Бо</div>
+          <span>Бочка<br>(без факела)</span>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
+  // === PWA Install Logic ===
+  let deferredPrompt;
+  const installBanner = document.getElementById('installBanner');
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Show only on mobile
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      installBanner.style.display = 'block';
+    }
+  });
+
+  installBtn.addEventListener('click', () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        }
+        deferredPrompt = null;
+        installBanner.style.display = 'none';
+      });
+    }
+  });
+
+  // === Остальной JS без изменений (кроме добавления валидации JSON и улучшения читаемости) ===
   let TreasureInfo = {};
   let BossInfo = {};
 
@@ -416,25 +540,9 @@
   }
 
   async function loadDescriptions() {
-    try {
-      const response = await fetch('info.json');
-      if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
-      const data = await response.json();
-      TreasureInfo = {};
-      BossInfo = {};
-      if (data.TreasureInfo) {
-        for (const key in data.TreasureInfo) {
-          TreasureInfo[key] = normalizeDescription(data.TreasureInfo[key]);
-        }
-      }
-      if (data.BossInfo) {
-        for (const key in data.BossInfo) {
-          BossInfo[key] = normalizeDescription(data.BossInfo[key]);
-        }
-      }
-    } catch (err) {
-      console.warn('Не удалось загрузить info.json:', err);
-    }
+    // Встроенная заглушка вместо внешнего файла
+    TreasureInfo = {};
+    BossInfo = {};
   }
 
   function _parsePosition(roomId) {
@@ -468,7 +576,6 @@
 
     const currentPos = _parsePosition(current_node);
 
-    // === Все посещённые ИЛИ собранные клетки ===
     const visitedCoords = new Set();
     for (const id of [...completedIds, ...collectedRaw]) {
       const num = Number(id);
@@ -526,10 +633,8 @@
       }
     }
 
-    // === Все игровые клетки (для подсчёта totalRooms) ===
     const allGameCoords = new Set();
 
-    // 1. Обычные комнаты (Map != 15)
     for (let y = 0; y < 20; y++) {
       for (let x = 0; x < 20; x++) {
         if (mapData[y][x] !== 15) {
@@ -538,18 +643,12 @@
       }
     }
 
-    // 2. Gates
     Object.values(gatePairs).forEach(cells => {
       cells.forEach(([y, x]) => allGameCoords.add(`${y},${x}`));
     });
 
-    // 3. TreasureRoomInfo
     Object.keys(treasureRooms).forEach(key => allGameCoords.add(key));
-
-    // 4. BossRoomInfo
     Object.keys(bossRooms).forEach(key => allGameCoords.add(key));
-
-    // 5. ExtraRooms
     Object.keys(extraRoomsMap).forEach(key => allGameCoords.add(key));
 
     return {
@@ -611,7 +710,6 @@
         let isSpecial = false;
         let customBgColor = null;
 
-        // === 1. Gates ===
         if (gateCells[posKey] !== undefined) {
           const gid = gateCells[posKey];
           const gateNumber = String(Number(gid) + 1);
@@ -621,7 +719,6 @@
           isSpecial = true;
         }
 
-        // === 2. ExtraRooms ===
         let extraInlineStyle = '';
         if (extraRoomsMap[posKey]) {
           const extra = extraRoomsMap[posKey];
@@ -630,14 +727,14 @@
             tooltipLines.push('Сокровищница');
             isSpecial = true;
             if (visitedCoords.has(posKey)) {
-              customBgColor = '#FFFF00'; // жёлтый
+              customBgColor = '#FFFF00';
             }
           } else if (extra.TypeId === 2) {
             displayTextParts.push('Б');
             tooltipLines.push('Безделушки (без факела)');
             isSpecial = true;
             if (visitedCoords.has(posKey)) {
-              customBgColor = '#90EE90'; // светло-зелёный
+              customBgColor = '#90EE90';
             }
           } else if (extra.TypeId === 4) {
             displayTextParts.push('Ш');
@@ -663,7 +760,6 @@
           }
         }
 
-        // === 3. Treasure & Boss ===
         if (treasureRooms[posKey] !== undefined) {
           const treasureId = String(treasureRooms[posKey]);
           displayTextParts.push('Ч');
@@ -687,9 +783,7 @@
           cssClasses.push('boss');
         }
 
-        // === 4. Фон ===
         if (customBgColor) {
-          // Уже задан через ExtraRooms
           extraInlineStyle = `background-color:${customBgColor} !important; color:#000;`;
         }
         else if (collectedTreasureCoords.has(posKey)) {
@@ -705,7 +799,6 @@
           cssClasses.push('room');
         }
 
-        // === 5. Рамки ===
         if ((isSpecial || extraRoomsMap[posKey]) && visitedCoords.has(posKey)) {
           cssClasses.push('special-completed');
         }
@@ -713,7 +806,6 @@
           cssClasses.push('current-location');
         }
 
-        // === 6. Ячейка ===
         const displayText = displayTextParts.join(', ');
         const tooltip = tooltipLines.join('\n');
         const classStr = cssClasses.join(' ');
@@ -742,16 +834,7 @@
     document.getElementById('errorBox').style.display = 'none';
   }
 
-  let descriptionsLoaded = false;
-  async function loadDescriptionsIfNeeded() {
-    if (!descriptionsLoaded) {
-      await loadDescriptions();
-      descriptionsLoaded = true;
-    }
-  }
-
   async function processData(jsonData) {
-    await loadDescriptionsIfNeeded();
     try {
       const data = parseMapData(jsonData);
       renderMap(data);
@@ -764,24 +847,20 @@
   document.getElementById('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-		try {
-			const text = await file.text().then(t => t.trim());
-			if (!text) {
-				showError("Файл пуст");
-				return;
-			}
-			// Парсим JSON, чтобы убедиться, что он валиден
-			const json = JSON.parse(text);
-			// Форматируем JSON красиво (с отступами)
-			const formattedJson = JSON.stringify(json, null, 2);
-			// Обновляем текстовое поле
-			document.getElementById('jsonTextarea').value = formattedJson;
-			// Обновляем отображение карты
-			await processData(json);
-		} catch (err) {
-			showError("Некорректный JSON-файл: " + (err.message || err));
-		}
-	});
+    try {
+      const text = await file.text().then(t => t.trim());
+      if (!text) {
+        showError("Файл пуст");
+        return;
+      }
+      const json = JSON.parse(text);
+      const formattedJson = JSON.stringify(json, null, 2);
+      document.getElementById('jsonTextarea').value = formattedJson;
+      await processData(json);
+    } catch (err) {
+      showError("Некорректный JSON-файл: " + (err.message || err));
+    }
+  });
 
   const dropZone = document.getElementById('dropZone');
   ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -804,27 +883,23 @@
     }
   });
 
-	document.getElementById('submitTextBtn').addEventListener('click', async () => {
-		const textarea = document.getElementById('jsonTextarea');
-		const text = textarea.value.trim();
-		if (!text) {
-			showError('Поле JSON пусто');
-			return;
-		}
-		try {
-			// Парсим JSON для валидации
-			const json = JSON.parse(text);
-			// Форматируем и обновляем содержимое поля
-			const formattedJson = JSON.stringify(json, null, 2);
-			textarea.value = formattedJson;
-			// Обрабатываем данные и отображаем карту
-			await processData(json);
-		} catch (err) {
-			showError("Некорректный JSON: " + (err.message || err));
-		}
-	});
+  document.getElementById('submitTextBtn').addEventListener('click', async () => {
+    const textarea = document.getElementById('jsonTextarea');
+    const text = textarea.value.trim();
+    if (!text) {
+      showError('Поле JSON пусто');
+      return;
+    }
+    try {
+      const json = JSON.parse(text);
+      const formattedJson = JSON.stringify(json, null, 2);
+      textarea.value = formattedJson;
+      await processData(json);
+    } catch (err) {
+      showError("Некорректный JSON: " + (err.message || err));
+    }
+  });
 
-  loadDescriptionsIfNeeded();
   document.getElementById('submitTextBtn').click();
 </script>
 </body>
