@@ -1,832 +1,837 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="google-site-verification" content="19a6wWIbngh3BDPjpDAuNgKf8nLcZQMfyCDqLjjKHGs" />	
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Underspire Map Live</title>
-  <style>
-    body {
-      background: #1e1e1e;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      margin: 0;
-    }
-    h2 {
-      margin-bottom: 5px;
-      font-size: 20px;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Underspire Map Viewer (Hybrid)</title>
+<style>
+/* === Общие стили === */
+body {
+  background: #1e1e1e;
+  color: white;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
+}
+h2 {
+  margin-bottom: 5px;
+  font-size: 20px;
+}
 
-    /* === Main Layout === */
-    .main-layout {
-      display: flex;
-      gap: 20px;
-      width: 100%;
-      max-width: 1600px;
-      margin-top: 10px;
-    }
+/* === Основной макет === */
+.main-layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1600px;
+  margin-top: 10px;
+}
 
-    /* === Left Panel: Upload & JSON === */
-    .left-panel {
-      width: 360px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+/* === Левая панель: загрузка === */
+.left-panel {
+  width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.upload-box {
+  background: #2d2d2d;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+.upload-box h3 {
+  margin-top: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.upload-box h3::before {
+  content: "📁";
+  font-size: 18px;
+}
+.upload-box h3.upload-json::before {
+  content: "📋";
+}
+.drop-zone {
+  border: 2px dashed #555;
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+  background: #252525;
+  transition: background 0.3s;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+.drop-zone.drag-over {
+  background: #333;
+  border-color: #4a90e2;
+}
+.file-label {
+  color: #4a90e2;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.file-label:hover {
+  color: #357abd;
+}
+.text-input-container {
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+#jsonTextarea {
+  flex: 1;
+  width: 100%;
+  min-height: 530px;
+  background: #1e1e1e;
+  color: #0f0;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  resize: vertical;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+#submitTextBtn {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 14px;
+  width: 100%;
+  white-space: nowrap;
+}
+#submitTextBtn:hover {
+  background: #357abd;
+}
 
-    .upload-box {
-      background: #2d2d2d;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .upload-box h3 {
-      margin-top: 0;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .upload-box h3::before {
-      content: "📁";
-      font-size: 18px;
-    }
-    .upload-box h3.upload-json::before {
-      content: "📋";
-    }
+/* === Статистика === */
+.stats {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 14px;
+  color: #ccc;
+  background: #2d2d2d;
+  padding: 10px;
+  border-radius: 6px;
+  max-width: 1400px;
+}
+.stats strong {
+  color: #fff;
+  font-weight: bold;
+}
 
-    .drop-zone {
-      border: 2px dashed #555;
-      border-radius: 6px;
-      padding: 20px;
-      text-align: center;
-      background: #252525;
-      transition: background 0.3s;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-    .drop-zone.drag-over {
-      background: #333;
-      border-color: #4a90e2;
-    }
-    .file-label {
-      color: #4a90e2;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .file-label:hover {
-      color: #357abd;
-    }
+/* === Карта (визуализация из нового скрипта) === */
+#map-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+  background: #2d2d2d;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+#map-container {
+  display: grid;
+  gap: 0;
+  position: relative;
+  padding-left: 30px;   /* Y слева */
+  padding-right: 30px;  /* Y справа */
+  padding-bottom: 30px; /* X снизу */
+  padding-top: 30px;    /* X сверху */
+  transform-origin: top left;
+  background: #111;
+  border: 2px solid #444;
+}
+.tile {
+  width: 32px;
+  height: 32px;
+  background-size: cover;
+  image-rendering: pixelated;
+  background-color: transparent;
+  position: relative;
+}
+.tile-bg {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  image-rendering: pixelated;
+}
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.trap-overlay { background-image: url('tiles/trap.png'); }
+.oracle-overlay { background-image: url('tiles/oracle.png'); }
+.secret-overlay { background-image: url('tiles/secret.png'); }
+.trinket-overlay { background-image: url('tiles/trinket.png'); }
+.powder-overlay { background-image: url('tiles/powder.png'); }
+.cursedmine-overlay { background-image: url('tiles/cursedmine.png'); }
+.treasure-overlay { background-image: url('tiles/treasure.png'); }
+.entrance-overlay { background-image: url('tiles/entrance.png'); }
+.merchant-overlay { background-image: url('tiles/merchant.png'); }
+.boss7-overlay { background-image: url('tiles/boss7.png'); }
+.treasure-guard-overlay {
+  background-image: var(--guard-url);
+}
+.done-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 10px;
+  color: #0f0;
+  font-family: Arial, sans-serif;
+  text-shadow: 0 0 2px #000;
+}
+.empty {
+  background-color: #111;
+}
+.y-label, .y-label-right {
+  position: absolute;
+  width: 30px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #888;
+  pointer-events: none;
+  z-index: 5;
+}
+.y-label {
+  left: 0;
+}
+.y-label-right {
+  right: 0;
+}
+.x-label, .x-label-top {
+  position: absolute;
+  width: 32px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #888;
+  pointer-events: none;
+  z-index: 5;
+}
+.x-label {
+  bottom: 0;
+}
+.x-label-top {
+  top: 0;
+}
+.keystone {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 10;
+}
+.tile-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 1px;
+  font-size: 8px;
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 20;
+  max-width: 300px;
+  min-width: 300px;
+  word-break: pre-line;
+  text-align: center;
+}
+.tile:hover .tile-tooltip {
+  opacity: 1;
+}
 
-    .text-input-container {
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      margin-top: 10px;
-    }
-	#jsonTextarea {
-	  flex: 1;
-	  width: 100%;
-	  min-height: 530px;
-	  background: #1e1e1e;
-	  color: #0f0;
-	  border: 1px solid #444;
-	  border-radius: 4px;
-	  padding: 8px;
-	  font-family: monospace;
-	  resize: vertical;
-	  font-size: 12px;
-	  box-sizing: border-box;
-	}
+/* === Легенда (из старого скрипта, но с иконками) === */
+.legend {
+  width: 260px;
+  flex-shrink: 0;
+  background: #2d2d2d;
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* max-height: 600px; */
+  overflow-y: auto;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 12px;
+}
+.legend-color {
+  width: 24px;
+  height: 24px;
+  background-size: cover;
+  image-rendering: pixelated;
+  margin: 0;
+  border: 1px solid #555;
+  border-radius: 2px;
+}
 
-	#submitTextBtn {
-	  background: #4a90e2;
-	  color: white;
-	  border: none;
-	  border-radius: 4px;
-	  cursor: pointer;
-	  padding: 10px;
-	  font-size: 14px;
-	  width: 100%;
-	  white-space: nowrap;
-	}
-	#submitTextBtn:hover {
-	  background: #357abd;
-	}
-
-    /* === Stats === */
-    .stats {
-      text-align: center;
-      margin: 10px 0;
-      font-size: 14px;
-      color: #ccc;
-      background: #2d2d2d;
-      padding: 10px;
-      border-radius: 6px;
-      max-width: 1400px;
-    }
-    .stats strong {
-      color: #fff;
-      font-weight: bold;
-    }
-
-    /* === Map === */
-    .map-container {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    .map-grid-container {
-      background: #2d2d2d;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .map-grid {
-      display: grid;
-      grid-template-columns: 32px repeat(20, 32px) 32px;
-      grid-template-rows: auto repeat(20, 32px) auto;
-      gap: 0;
-      border: 2px solid #555;
-      background: #1e1e1e;
-    }
-    .axis-label {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      background: #333;
-      color: #aaa;
-      user-select: none;
-    }
-    .y-label {
-      background: #2d2d2d !important;
-      border-right: 1px solid #555;
-      border-left: 1px solid #555;
-    }
-    .cell {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-      border: 1px solid #000;
-      box-sizing: border-box;
-      position: relative;
-      background: #1e1e1e;
-      color: #fff;
-    }
-    .empty { background-color: #1e1e1e; color: #555; }
-    .room { background-color: #ffffff; color: #000; }
-    .completed { background-color: #87CEFA; color: #000; }
-    .collected-generic { background-color: #90EE90; color: #000; }
-    .treasure { background-color: #FFD700; color: #000; }
-    .boss { background-color: #32CD32; color: #fff; }
-    .gate { background-color: #FF4500; color: white; }
-    .current-location {
-      border: 3px solid #0000FF !important;
-      box-sizing: border-box;
-      width: 31px;
-      height: 31px;
-      z-index: 10;
-    }
-    .special-completed {
-      border: 3px solid #FFA500 !important;
-      box-sizing: border-box;
-      width: 31px;
-      height: 31px;
-    }
-
-    .cell:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -36px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      color: white;
-      padding: 4px 6px;
-      border-radius: 3px;
-      font-size: 10px;
-      white-space: pre;
-      z-index: 100;
-      text-align: center;
-    }
-
-    /* === Legend === */
-    .legend {
-      width: 280px;
-      flex-shrink: 0;
-      background: #2d2d2d;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      margin: 6px 0;
-    }
-    .legend-color {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 10px;
-      font-weight: bold;
-      font-size: 14px;
-      border: 1px solid #555;
-      border-radius: 3px;
-    }
-    .legend-color.blue-border {
-      border: 3px solid #0000FF;
-      background: transparent;
-    }
-    .legend-color.orange-border {
-      border: 3px solid #FFA500;
-      background: transparent;
-    }
-    .legend-color.red-bg {
-      background-color: #FF4500;
-      color: white;
-    }
-    .legend-color.green-bg {
-      background-color: #32CD32;
-      color: white;
-    }
-    .legend-color.yellow-bg {
-      background-color: #FFD700;
-      color: #000;
-    }
-    .legend-color.lightblue-bg {
-      background-color: #87CEFA;
-      color: #000;
-    }
-    .legend-color.greenlight-bg {
-      background-color: #90EE90;
-      color: #000;
-    }
-    .legend-color.white-bg {
-      background-color: #ffffff;
-      color: #000;
-    }
-    .legend-color.purple-bg {
-      background-color: #DA70D6;
-      color: #fff;
-    }
-    .legend-color.oracle-bg {
-      background-color: #8A2BE2;
-      color: #fff;
-    }
-    .legend-color.gray-bg {
-      background-color: #aaa;
-      color: #000;
-    }
-
-    /* === Error Box === */
-    .error-box {
-      background: #442222;
-      padding: 15px;
-      border-radius: 6px;
-      margin: 10px 0;
-      width: 100%;
-      max-width: 1600px;
-      font-family: monospace;
-      white-space: pre-wrap;
-      font-size: 14px;
-    }
-  </style>
+/* === Ошибки === */
+.error-box {
+  background: #442222;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 1600px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  font-size: 14px;
+  display: none;
+}
+</style>
 </head>
 <body>
-  <h2>Underspire Map Live (20×20)</h2>
-  <div id="errorBox" class="error-box" style="display:none;"></div>
+<h2>Underspire Map Viewer (Hybrid)</h2>
+<div id="errorBox" class="error-box"></div>
 
-  <div class="main-layout">
-
-    <!-- Center + Right: Stats, Map, Legend -->
-    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
-
-      <div class="map-container">
-		<!-- Left Panel -->
-		<div class="left-panel">
-		  <div class="upload-box">
-			<h3>Загрузить файл</h3>
-			<div id="dropZone" class="drop-zone">
-			  Перетащите сюда JSON-файл или 
-			  <label for="fileInput" class="file-label">выберите файл</label>
-			  <input type="file" id="fileInput" accept=".json" style="display:none;">
-			</div>
-		  </div>
-		  <div class="upload-box">
-		    <h3 class="upload-json">Вставить JSON</h3>
-		    <div class="text-input-container">
-			<textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504,404,304,8305,405,505,503,403,303,203,204,104,402,401,8400,8501,8506,507,607,606,1013,1014,8508,509,8609,610,608],"Collected":[702,704,605,1003,1002,902,504,404,305,203,400,501,506,507,1014,508,509,609,608],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}},"Color":2,"DeepShrine":false,"Trinkets":{"0":1,"1":9,"2":7,"3":6,"4":11,"5":4},"Keystones":{"0":1,"1":1}},"SimpleRewardArray":[{"Type":"cursedRune","Data":0,"Amount":25,"Major":true}]}}</textarea>
-			<button type="button" id="submitTextBtn">Загрузить</button>
-		  </div>
-		</div>
-		</div>
-
-        <div class="map-grid-container">
-		  <div id="mapStats" class="stats" style="display:none;"></div>
-          <div id="mapGrid" class="map-grid">
-            <!-- будет заполнено скриптом -->
-          </div>
-        </div>
-
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color blue-border"></div>
-            <span>Текущая позиция</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color orange-border"></div>
-            <span>Посещённые Боссы,<br> Часовые и Ворота</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color red-bg">1</div>
-            <span>Ворота (номер пары)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color green-bg">Босс</div>
-            <span>Босс</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color yellow-bg">Ч</div>
-            <span>Часовой<br>(страж сокровища)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color purple-bg">T</div>
-            <span>Телепорт</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color oracle-bg">О</div>
-            <span>Оракул</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color lightblue-bg"></div>
-            <span>Посещённые комнаты</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color greenlight-bg"></div>
-            <span>Посещённые комнаты с наградами</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg"></div>
-            <span>Не пройденные комнаты</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">Б</div>
-            <span>Безделушки<br>(без факела)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">С</div>
-            <span>Сокровищница</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color white-bg">Бо</div>
-            <span>Бочка<br>(без факела)</span>
-          </div>
-        </div>
-		
+<div class="main-layout">
+  <!-- Левая панель -->
+  <div class="left-panel">
+    <div class="upload-box">
+      <h3>Загрузить файл</h3>
+      <div id="dropZone" class="drop-zone">
+        Перетащите сюда JSON-файл или
+        <label for="fileInput" class="file-label">выберите файл</label>
+        <input type="file" id="fileInput" accept=".json" style="display:none;">
+      </div>
+    </div>
+    <div class="upload-box">
+      <h3 class="upload-json">Вставить JSON</h3>
+      <div class="text-input-container">
+        <textarea id="jsonTextarea" placeholder='{"result":{"Info":{...}}}'>{"result":{"NewHeroData":{},"Info":{"UnderspireData":{"Map":[[15,15,15,15,15,4268107,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,51380379,30470344,50388995,15,15,15,15,15,15,15,15,15,15,15,15,38797499,15],[15,15,15,1093833,53254,67182814,33607690,15,15,15,15,15,15,15,15,15,15,15,15,55984173,409810,15],[15,15,15,33591306,33591305,33599697,64008386,65073353,73733,17825975,55689323,15,15,15,15,15,15,15,15,17186826,55574683],[19976237,33599489,50368517,33583106,67137754,53258,67162124,67166214,15,15,21078216,114695,15,4444203,15,6291629,33939457,67494101,33947650,67518682],[15,16830558,15,24588,50356434,16834572,33616085,50405585,67182805,77680833,50429958,18874555,70254781,237572,17002709,209107,48615628,67481603,409612,67518470],[67108893,16777221,50331827,33574925,67129348,63979715,67195101,33640452,37847235,33652956,67215365,16892118,15,15,62046409,33746946,20160555,1409226,33890521,33902599],[15,15,19923148,33558529,53485761,67121158,52449323,33701899,33660940,50446337,16904405,16916481,16924673,159749,180226,48443596,67334150,17125388,3481796,323587],[15,15,15,16781322,50339852,16789509,67125254,67248140,16904193,114690,16924893,16916486,50479116,16936963,33746956,69415109,33779925,50569217,67346439,67420378],[15,15,34623595,50339850,50352137,50331799,47345865,33701893,3285190,33681420,79831235,21180509,67301377,67289092,16969941,79900869,3145879,67358728,67371011,299018],[15,16797709,16793812,33566932,16390,15,2097310,15,15,19034205,33701892,22179879,16986126,33853661,286929,24391877,17039361,50581510,274444,33841362],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,19173422,37748891,30683338,15,15,50618586],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,64262348,50618582,15,4530219,50630666],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,1384509,323588,17088514],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,78979273,323590],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,54526142,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15],[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15]],"Gates":{"0":{"Node":605,"Dir":3},"1":{"Node":505,"Dir":1},"2":{"Node":710,"Dir":1},"3":{"Node":816,"Dir":1},"4":{"Node":819,"Dir":0},"5":{"Node":416,"Dir":3}},"CurrentNode":608,"Completed":[600,601,602,702,703,704,705,605,803,903,9003,1004,904,905,9002,8902,604,8504,404,304,8305,405,505,503,403,303,203,204,104,402,401,8400,8501,8506,507,607,606,1013,1014,8508,509,8609,610,608],"Collected":[702,704,605,1003,1002,902,504,404,305,203,400,501,506,507,1014,508,509,609,608],"MerchantData":[100,0,2,3,5,1,4,0,5,1,3,0],"ExtraRooms":[{"RoomId":205,"TypeId":0,"Data":912},{"RoomId":606,"TypeId":1,"Data":1013},{"RoomId":1013,"TypeId":1,"Data":606},{"RoomId":514,"TypeId":4,"Data":16},{"RoomId":819,"TypeId":3,"Data":1},{"RoomId":1014,"TypeId":2},{"RoomId":404,"TypeId":2},{"RoomId":507,"TypeId":2},{"RoomId":305,"TypeId":5,"Data":16220},{"RoomId":810,"TypeId":5,"Data":16220},{"RoomId":1119,"TypeId":5,"Data":16220},{"RoomId":1003,"TypeId":5,"Data":16220},{"RoomId":508,"TypeId":5,"Data":16220},{"RoomId":515,"TypeId":5,"Data":16220},{"RoomId":1002,"TypeId":5,"Data":16220},{"RoomId":218,"TypeId":5,"Data":16220},{"RoomId":1019,"TypeId":5,"Data":16220},{"RoomId":609,"TypeId":5,"Data":16220},{"RoomId":504,"TypeId":5,"Data":16220},{"RoomId":816,"TypeId":5,"Data":16220},{"RoomId":710,"TypeId":5,"Data":16220},{"RoomId":506,"TypeId":5,"Data":16220},{"RoomId":618,"TypeId":5,"Data":16220},{"RoomId":1216,"TypeId":5,"Data":16220},{"RoomId":611,"TypeId":5,"Data":16220},{"RoomId":417,"TypeId":5,"Data":16220},{"RoomId":419,"TypeId":5,"Data":16220},{"RoomId":914,"TypeId":5,"Data":16220}],"FreeOfferAvailable":false,"BossRoomInfo":{"104":16161,"319":16162,"415":16166,"905":16165,"916":16164,"1006":16160,"1115":16163},"TreasureRooms":[16167,16168,16169,16170,16171,16172,16173,16174,16175,16176,16177,16178,16179,16180,16181,16182,16183,16184,16185,16186,16187,16188,16189,16190,16191,16192,16193,16194,16195,16196,16197,16198,16199,16200,16201,16202],"TreasureRoomInfo":{"5":16193,"217":16197,"310":16201,"400":16185,"413":16191,"501":16170,"616":16185,"706":16179,"902":16177,"911":16194,"1009":16182,"1011":16197,"1114":16179,"1218":16191,"1317":16174}},"Color":2,"DeepShrine":false,"Trinkets":{"0":1,"1":9,"2":7,"3":6,"4":11,"5":4},"Keystones":{"0":1,"1":1}},"SimpleRewardArray":[{"Type":"cursedRune","Data":0,"Amount":25,"Major":true}]}}</textarea>
+        <button type="button" id="submitTextBtn">Загрузить</button>
       </div>
     </div>
   </div>
 
+  <!-- Центр: карта + статистика -->
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+    <div id="mapStats" class="stats" style="display:none;"></div>
+    <div id="map-wrapper">
+      <div id="map-container"></div>
+    </div>
+  </div>
+
+  <!-- Правая панель: легенда -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/oracle.png)"></div><span>Oracle</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/secret.png)"></div><span>Secret</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/trinket.png)"></div><span>Trinket</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/powder.png)"></div><span>Powder</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/cursedmine.png)"></div><span>Cursed Mine</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure.png)"></div><span>Treasure</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/entrance.png)"></div><span>Entrance</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/merchant.png)"></div><span>Merchant</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/boss1-6.png)"></div><span>Boss 1–6</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/boss7.png)"></div><span>Boss 7</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/trap.png)"></div><span>Trap</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard1.png)"></div><span>TG Common</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard2.png)"></div><span>TG Rare</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard3.png)"></div><span>TG Ultra-Rare</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard4.png)"></div><span>TG Epic</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard5.png)"></div><span>TG Legendary</span></div>
+    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard6.png)"></div><span>TG Mythic</span></div>
+  </div>
+</div>
+
 <script>
-  let TreasureInfo = {};
-  let BossInfo = {};
+const container = document.getElementById('map-container');
+const statsEl = document.getElementById('mapStats');
+const errorBox = document.getElementById('errorBox');
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const jsonTextarea = document.getElementById('jsonTextarea');
+const submitTextBtn = document.getElementById('submitTextBtn');
 
-  function normalizeDescription(str) {
-    if (typeof str !== 'string') return '';
-    return str.replace(/,/g, '\n').replace(/\\n/g, '\n').trim();
+let currentScale = 1.0;
+let bossInfoMap = {};
+let treasureInfoMap = {};
+
+// === Загрузка info.json ===
+async function loadDescriptions() {
+  try {
+    const res = await fetch('info.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    bossInfoMap = data.BossInfo || {};
+    treasureInfoMap = data.TreasureInfo || {};
+  } catch (err) {
+    console.warn('Не удалось загрузить info.json:', err);
+    showError('Предупреждение: не удалось загрузить info.json — подсказки могут быть неполными.');
   }
+}
 
-  async function loadDescriptions() {
-    try {
-      const response = await fetch('info.json');
-      if (!response.ok) throw new Error(`Не удалось загрузить info.json: ${response.status}`);
-      const data = await response.json();
-      TreasureInfo = {};
-      BossInfo = {};
-      if (data.TreasureInfo) {
-        for (const key in data.TreasureInfo) {
-          TreasureInfo[key] = normalizeDescription(data.TreasureInfo[key]);
+// === Обработка ошибок ===
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = 'block';
+}
+function hideError() {
+  errorBox.style.display = 'none';
+}
+
+// === Загрузка файла ===
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text.trim());
+    const formatted = JSON.stringify(json, null, 2);
+    jsonTextarea.value = formatted;
+    await processData(json);
+  } catch (err) {
+    showError("Ошибка при загрузке файла: " + (err.message || err));
+  }
+});
+
+// === Drag & Drop ===
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropZone.addEventListener(eventName, e => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+});
+['dragenter', 'dragover'].forEach(eventName => {
+  dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
+});
+['dragleave', 'drop'].forEach(eventName => {
+  dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+});
+dropZone.addEventListener('drop', (e) => {
+  const files = e.dataTransfer.files;
+  if (files.length) {
+    fileInput.files = files;
+    fileInput.dispatchEvent(new Event('change'));
+  }
+});
+
+// === Вставка JSON ===
+submitTextBtn.addEventListener('click', async () => {
+  const text = jsonTextarea.value.trim();
+  if (!text) {
+    showError('Поле JSON пусто');
+    return;
+  }
+  try {
+    const json = JSON.parse(text);
+    const formatted = JSON.stringify(json, null, 2);
+    jsonTextarea.value = formatted;
+    await processData(json);
+  } catch (err) {
+    showError("Некорректный JSON: " + (err.message || err));
+  }
+});
+
+// === Масштабирование ===
+function updateScale() {
+  const rows = container.dataset.rows || 0;
+  const tileHeight = 32;
+  const targetHeight = window.innerHeight * 0.7;
+  const mapHeight = rows * tileHeight;
+  currentScale = mapHeight ? Math.min(targetHeight / mapHeight, 3) : 1;
+  container.style.transform = `scale(${currentScale})`;
+  container.style.margin = `${(1 - currentScale) * tileHeight}px 0 0 ${(1 - currentScale) * tileHeight}px`;
+}
+window.addEventListener('resize', updateScale);
+
+// === Основная обработка данных ===
+async function processData(dataJson) {
+  await loadDescriptions();
+  try {
+    const underspire = dataJson?.result?.Info?.UnderspireData;
+    if (!underspire) throw new Error('Не найден блок result.Info.UnderspireData');
+
+    const map = underspire.Map;
+    const extraRooms = underspire.ExtraRooms || [];
+    const completed = underspire.Completed || [];
+    const collected = underspire.Collected || [];
+    const gates = underspire.Gates || {};
+    const bossRoomInfo = underspire.BossRoomInfo || {};
+
+    if (!map || !Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) {
+      throw new Error('Некорректный массив карты');
+    }
+
+    // Boss positions
+    const bossPositions = {};
+    for (const [roomIdStr, bossId] of Object.entries(bossRoomInfo)) {
+      const roomId = parseInt(roomIdStr, 10);
+      if (isNaN(roomId)) continue;
+      const y = Math.floor(roomId / 100);
+      const x = roomId % 100;
+      bossPositions[`${y},${x}`] = { id: bossId };
+    }
+
+    // Special rooms
+    const specialRooms = {};
+    for (const room of extraRooms) {
+      if (room.TypeId != null && room.RoomId != null) {
+        const xx = room.RoomId % 100;
+        const yy = Math.floor(room.RoomId / 100);
+        specialRooms[`${yy},${xx}`] = room.TypeId;
+      }
+    }
+
+    // Done positions
+    const donePositions = new Set();
+    const allDoneIds = [...completed, ...collected];
+    for (const roomId of allDoneIds) {
+      const xx = roomId % 100;
+      const yy = Math.floor(roomId / 100);
+      donePositions.add(`${yy},${xx}`);
+    }
+
+    // === НОВАЯ ФУНКЦИЯ ПОДСЧЁТА ===
+    function calculateStats(map, extraRooms, donePositions) {
+      const AUTO_TYPE_IDS = new Set([0, 1, 2, 3, 4]); // Oracle, Secret, Trinket, Powder, CursedMine
+
+      function isAutoRoomByValue(value) {
+        if (value === 15) return false;
+        const hex = value.toString(16).toUpperCase();
+        if (hex.length < 2) return false;
+        const penultimate = hex[hex.length - 2];
+        return penultimate === '1' || penultimate === 'B'; // Entrance, Merchant
+      }
+
+      const specialMap = {};
+      for (const room of extraRooms) {
+        if (room.TypeId != null && room.RoomId != null) {
+          const xx = room.RoomId % 100;
+          const yy = Math.floor(room.RoomId / 100);
+          specialMap[`${yy},${xx}`] = room.TypeId;
         }
       }
-      if (data.BossInfo) {
-        for (const key in data.BossInfo) {
-          BossInfo[key] = normalizeDescription(data.BossInfo[key]);
+
+      let totalRooms = 0;
+      let openedAllCount = 0;
+      let progressRemaining = 0;
+
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          const value = map[y][x];
+          if (value === 15) continue;
+
+          totalRooms++;
+          const roomKey = `${y},${x}`;
+          const isDone = donePositions.has(roomKey);
+          if (isDone) openedAllCount++;
+
+          const typeId = specialMap[roomKey];
+          const isAutoByType = typeId != null && AUTO_TYPE_IDS.has(typeId);
+          const isAutoByValue = isAutoRoomByValue(value);
+          const isAuto = isAutoByType || isAutoByValue;
+
+          if (!isAuto) {
+            if (!isDone) progressRemaining++;
+          }
         }
       }
-    } catch (err) {
-      console.warn('Не удалось загрузить info.json:', err);
-    }
-  }
 
-  function _parsePosition(roomId) {
-    const s = String(roomId).padStart(4, '0');
-    if (s.length !== 4) return null;
-    const y = parseInt(s.slice(0, 2), 10);
-    const x = parseInt(s.slice(2), 10);
-    if (y >= 0 && y < 20 && x >= 0 && x < 20) return [y, x];
-    return null;
-  }
-
-  function _parseRoomsDict(roomDict) {
-    const result = {};
-    for (const [coordKey, roomId] of Object.entries(roomDict)) {
-      const pos = _parsePosition(coordKey);
-      if (pos) result[pos.join(',')] = roomId;
-    }
-    return result;
-  }
-
-  function parseMapData(dataJson) {
-    const { result } = dataJson;
-    const mapData = result.Info.UnderspireData.Map;
-    const completedIds = result.Info.UnderspireData.Completed || [];
-    const collectedRaw = result.Info.UnderspireData.Collected || [];
-    const treasureInfo = result.Info.UnderspireData.TreasureRoomInfo || {};
-    const bossInfo = result.Info.UnderspireData.BossRoomInfo || {};
-    const gatesInfo = result.Info.UnderspireData.Gates || {};
-    const extraRooms = result.Info.UnderspireData.ExtraRooms || [];
-    const current_node = result.Info.UnderspireData.CurrentNode;
-
-    const currentPos = _parsePosition(current_node);
-
-    // === Все посещённые ИЛИ собранные клетки ===
-    const visitedCoords = new Set();
-    for (const id of [...completedIds, ...collectedRaw]) {
-      const num = Number(id);
-      if (!isNaN(num) && num >= 0 && num <= 1919) {
-        const pos = _parsePosition(num);
-        if (pos) visitedCoords.add(pos.join(','));
-      }
+      return { totalRooms, openedAll: openedAllCount, progressRemaining };
     }
 
-    const treasureRooms = _parseRoomsDict(treasureInfo);
-    const bossRooms = _parseRoomsDict(bossInfo);
-
-    const collectedTreasureCoords = new Set();
-    for (const id of collectedRaw) {
-      const num = Number(id);
-      if (!isNaN(num) && num >= 0 && num <= 1919) {
-        const pos = _parsePosition(num);
-        if (pos && treasureRooms[pos.join(',')] !== undefined) {
-          collectedTreasureCoords.add(pos.join(','));
-        }
-      }
-    }
-
-    const gateCells = {};
-    const gatePairs = {};
-    for (const [gateId, gateData] of Object.entries(gatesInfo)) {
-      const node = gateData.Node;
-      const direction = gateData.Dir;
-      const basePos = _parsePosition(node);
-      if (!basePos) continue;
-
-      const [y, x] = basePos;
-      let cells;
-      if (direction === 1) cells = [[y, x], [y, x + 1]];
-      else if (direction === 3) cells = [[y, x], [y, x - 1]];
-      else if (direction === 0) cells = [[y, x], [y - 1, x]];
-      else if (direction === 2) cells = [[y, x], [y + 1, x]];
-      else continue;
-
-      if (cells.every(([cy, cx]) => cy >= 0 && cy < 20 && cx >= 0 && cx < 20)) {
-        gatePairs[gateId] = cells;
-        for (const cell of cells) {
-          gateCells[cell.join(',')] = gateId;
-        }
-      }
-    }
-
-    const extraRoomsMap = {};
-    for (const er of extraRooms) {
-      const roomId = er.RoomId;
-      const pos = _parsePosition(roomId);
-      if (pos) {
-        const key = pos.join(',');
-        extraRoomsMap[key] = { TypeId: er.TypeId, Data: er.Data !== undefined ? er.Data : null };
-      }
-    }
-
-    // === Все игровые клетки (для подсчёта totalRooms) ===
-    const allGameCoords = new Set();
-
-    // 1. Обычные комнаты (Map != 15)
-    for (let y = 0; y < 20; y++) {
-      for (let x = 0; x < 20; x++) {
-        if (mapData[y][x] !== 15) {
-          allGameCoords.add(`${y},${x}`);
-        }
-      }
-    }
-
-    // 2. Gates
-    Object.values(gatePairs).forEach(cells => {
-      cells.forEach(([y, x]) => allGameCoords.add(`${y},${x}`));
-    });
-
-    // 3. TreasureRoomInfo
-    Object.keys(treasureRooms).forEach(key => allGameCoords.add(key));
-
-    // 4. BossRoomInfo
-    Object.keys(bossRooms).forEach(key => allGameCoords.add(key));
-
-    // 5. ExtraRooms
-    Object.keys(extraRoomsMap).forEach(key => allGameCoords.add(key));
-
-    return {
-      mapData,
-      visitedCoords,
-      allGameCoords,
-      treasureRooms,
-      bossRooms,
-      gateCells,
-      gatePairs,
-      collectedTreasureCoords,
-      currentPos,
-      extraRoomsMap
-    };
-  }
-
-  function formatRoomIdAsYYXX(num) {
-    const s = String(num).padStart(4, '0');
-    return `${s.slice(0,2)}:${s.slice(2,4)}`;
-  }
-
-  function renderMap(data) {
-    const {
-      mapData,
-      visitedCoords,
-      allGameCoords,
-      treasureRooms,
-      bossRooms,
-      gateCells,
-      gatePairs,
-      collectedTreasureCoords,
-      currentPos,
-      extraRoomsMap
-    } = data;
-
-    const totalRooms = allGameCoords.size;
-    const remainingRooms = totalRooms - visitedCoords.size;
-
-    document.getElementById('mapStats').style.display = 'block';
-    document.getElementById('mapStats').innerHTML = `
-      Пройдено/Собрано: ${visitedCoords.size} | 
-      Часовых: ${Object.keys(treasureRooms).length} (собрано: ${collectedTreasureCoords.size}) | 
-      Боссов: ${Object.keys(bossRooms).length} | 
-      Ворот: ${Object.keys(gatePairs).length}<br>
-      <strong>Комнат для открытия: ${remainingRooms} из ${totalRooms}</strong>
+    const stats = calculateStats(map, extraRooms, donePositions);
+    statsEl.innerHTML = `
+      Всего комнат: <b>${stats.totalRooms}</b><br>
+      Открыто: <b>${stats.openedAll}</b> | Осталось: <b>${stats.progressRemaining}</b>
     `;
+    statsEl.style.display = 'block';
 
-    const axisLabels = Array.from({length: 20}, (_, x) => `<div class="axis-label">${x}</div>`).join('');
-    let mapRows = '';
+    renderMap(map, specialRooms, donePositions, bossPositions);
+    renderGates(map, gates);
+    addCoordinateLabels(map);
 
-    for (let y = 0; y < 20; y++) {
-      let rowCells = `<div class="axis-label y-label">${y}</div>`;
-      for (let x = 0; x < 20; x++) {
-        const cellValue = mapData[y][x];
-        const posKey = `${y},${x}`;
-        let cssClasses = ['cell'];
-        let displayTextParts = [];
-        let tooltipLines = [];
-        let isSpecial = false;
-        let customBgColor = null;
+    hideError();
+    updateScale();
+  } catch (e) {
+    showError("Ошибка обработки данных: " + (e.message || e));
+  }
+}
 
-        // === 1. Gates ===
-        if (gateCells[posKey] !== undefined) {
-          const gid = gateCells[posKey];
-          const gateNumber = String(Number(gid) + 1);
-          displayTextParts.push(gateNumber);
-          tooltipLines.push(`Ворота ${gateNumber}`);
-          cssClasses.push('gate');
-          isSpecial = true;
+// === Рендеринг карты (из нового скрипта) ===
+const typeToClass = {
+  0: 'oracle-overlay',
+  1: 'secret-overlay',
+  2: 'trinket-overlay',
+  3: 'powder-overlay',
+  4: 'cursedmine-overlay',
+  5: 'treasure-overlay'
+};
+const typeIdToName = {
+  0: 'Oracle',
+  1: 'Secret',
+  2: 'Trinket',
+  3: 'Powder',
+  4: 'Cursed Mine',
+  5: 'Treasure'
+};
+
+function renderMap(map, specialRooms, donePositions, bossPositions) {
+  const rows = map.length;
+  const cols = map[0]?.length || 0;
+  container.dataset.rows = rows;
+  container.dataset.cols = cols;
+  container.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
+  container.innerHTML = '';
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const value = map[y][x];
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      let hasContent = false;
+      let tooltipTexts = [];
+
+      if (value === 15) {
+        tile.classList.add('empty');
+      } else {
+        const hex = value.toString(16).toUpperCase();
+        const lastHexChar = hex.slice(-1);
+        if (lastHexChar >= '1' && lastHexChar <= 'E') {
+          const bg = document.createElement('div');
+          bg.className = 'tile-bg';
+          bg.style.backgroundImage = `url(tiles/${lastHexChar}.png)`;
+          tile.appendChild(bg);
+          hasContent = true;
+        } else {
+          tile.classList.add('empty');
         }
 
-        // === 2. ExtraRooms ===
-        let extraInlineStyle = '';
-        if (extraRoomsMap[posKey]) {
-          const extra = extraRoomsMap[posKey];
-          if (extra.TypeId === 5 && extra.Data === 16220) {
-            displayTextParts.push('С');
-            tooltipLines.push('Сокровищница');
-            isSpecial = true;
-            if (visitedCoords.has(posKey)) {
-              customBgColor = '#FFFF00'; // жёлтый
-            }
-          } else if (extra.TypeId === 2) {
-            displayTextParts.push('Б');
-            tooltipLines.push('Безделушки (без факела)');
-            isSpecial = true;
-            if (visitedCoords.has(posKey)) {
-              customBgColor = '#90EE90'; // светло-зелёный
-            }
-          } else if (extra.TypeId === 4) {
-            displayTextParts.push('Ш');
-            tooltipLines.push('Проклятая шахта (без факела)');
-            extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
-          } else if (extra.TypeId === 3) {
-            displayTextParts.push('Бо');
-            tooltipLines.push('Бочка (без факела)');
-            extraInlineStyle = 'background-color:#A9A9A9 !important; color:#000;';
-          } else if (extra.TypeId === 1) {
-            displayTextParts.push('T');
-            const dest = formatRoomIdAsYYXX(extra.Data);
-            tooltipLines.push(`Телепорт в ${dest}`);
-            extraInlineStyle = 'background-color:#DA70D6 !important; color:#fff;';
-          } else if (extra.TypeId === 0) {
-            displayTextParts.push('O');
-            const dest = formatRoomIdAsYYXX(extra.Data);
-            tooltipLines.push(`Оракул в ${dest}`);
-            extraInlineStyle = 'background-color:#8A2BE2 !important; color:#fff;';
-          } else {
-            tooltipLines.push(`TypeId=${extra.TypeId}, Data=${extra.Data !== null ? extra.Data : '—'}`);
-            displayTextParts.push('E');
+        // Treasure Guards
+        if (hex.length >= 2) {
+          const penultimate = hex[hex.length - 2];
+          if (penultimate >= '2' && penultimate <= '7') {
+            const guardIndex = parseInt(penultimate, 16) - 2;
+            const guardNames = ['TG Common','TG Rare','TG Ultra-Rare','TG Epic','TG Legendary','TG Mythic'];
+            const guardName = guardNames[guardIndex] || `TG Unknown (${penultimate})`;
+            const guardNum = guardIndex + 1;
+            const guard = document.createElement('div');
+            guard.className = 'overlay treasure-guard-overlay';
+            guard.style.backgroundImage = `url(tiles/treasure_guard${guardNum}.png)`;
+            tile.appendChild(guard);
+            tooltipTexts.push(guardName);
+            hasContent = true;
+          }
+          if (penultimate === '1') {
+            const entrance = document.createElement('div');
+            entrance.className = 'overlay entrance-overlay';
+            tile.appendChild(entrance);
+            tooltipTexts.push('Entrance');
+            hasContent = true;
+          }
+          if (penultimate === 'C') {
+            const trap = document.createElement('div');
+            trap.className = 'overlay trap-overlay';
+            tile.appendChild(trap);
+            tooltipTexts.push('Trap');
+            hasContent = true;
+          }
+          if (penultimate === 'B') {
+            const merchant = document.createElement('div');
+            merchant.className = 'overlay merchant-overlay';
+            tile.appendChild(merchant);
+            tooltipTexts.push('Merchant');
+            hasContent = true;
           }
         }
-
-        // === 3. Treasure & Boss ===
-        if (treasureRooms[posKey] !== undefined) {
-          const treasureId = String(treasureRooms[posKey]);
-          displayTextParts.push('Ч');
-          isSpecial = true;
-          if (TreasureInfo[treasureId]) {
-            tooltipLines.push(TreasureInfo[treasureId]);
-          } else {
-            tooltipLines.push(`Часовой ID ${treasureId}`);
-          }
-          cssClasses.push('treasure');
-        }
-        else if (bossRooms[posKey] !== undefined) {
-          const bossId = String(bossRooms[posKey]);
-          displayTextParts.push('Босс');
-          isSpecial = true;
-          if (BossInfo[bossId]) {
-            tooltipLines.push(BossInfo[bossId]);
-          } else {
-            tooltipLines.push(`Босс ID ${bossId}`);
-          }
-          cssClasses.push('boss');
-        }
-
-        // === 4. Фон ===
-        if (customBgColor) {
-          // Уже задан через ExtraRooms
-          extraInlineStyle = `background-color:${customBgColor} !important; color:#000;`;
-        }
-        else if (collectedTreasureCoords.has(posKey)) {
-          cssClasses.push('collected-generic');
-        }
-        else if (visitedCoords.has(posKey)) {
-          cssClasses.push('completed');
-        }
-        else if (cellValue === 15 && !extraRoomsMap[posKey] && gateCells[posKey] === undefined) {
-          cssClasses.push('empty');
-        }
-        else {
-          cssClasses.push('room');
-        }
-
-        // === 5. Рамки ===
-        if ((isSpecial || extraRoomsMap[posKey]) && visitedCoords.has(posKey)) {
-          cssClasses.push('special-completed');
-        }
-        if (currentPos && currentPos[0] === y && currentPos[1] === x) {
-          cssClasses.push('current-location');
-        }
-
-        // === 6. Ячейка ===
-        const displayText = displayTextParts.join(', ');
-        const tooltip = tooltipLines.join('\n');
-        const classStr = cssClasses.join(' ');
-        const styleAttr = extraInlineStyle ? ` style="${extraInlineStyle}"` : '';
-        rowCells += `<div class="${classStr}" data-tooltip="${tooltip.replace(/"/g, '&quot;')}"${styleAttr}>${displayText}</div>`;
       }
-      rowCells += `<div class="axis-label y-label">${y}</div>`;
-      mapRows += `<div style="display:contents;">${rowCells}</div>`;
+
+      const roomKey = `${y},${x}`;
+
+      // Боссы
+      if (bossPositions[roomKey]) {
+        const { id } = bossPositions[roomKey];
+        const desc = bossInfoMap[id] || `BOSS ? (ID: ${id})`;
+        const parts = desc.split(/,\s*/);
+        const bossLevelStr = parts[0] || '';
+        let levelNum = -1;
+        if (bossLevelStr.startsWith('BOSS ')) {
+          levelNum = parseInt(bossLevelStr.slice(5), 10);
+        }
+        if (levelNum >= 1 && levelNum <= 6) {
+          const img = document.createElement('img');
+          img.src = `tiles/boss1-6.png`;
+          img.className = 'overlay';
+          Object.assign(img.style, {
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            imageRendering: 'pixelated',
+            pointerEvents: 'none'
+          });
+          tile.appendChild(img);
+          tooltipTexts.push(...parts);
+          hasContent = true;
+        } else if (levelNum === 7) {
+          const boss = document.createElement('div');
+          boss.className = 'overlay boss7-overlay';
+          tile.appendChild(boss);
+          tooltipTexts.push(...parts);
+          hasContent = true;
+        } else {
+          tooltipTexts.push(`Неизвестный босс: ${desc}`);
+          hasContent = true;
+        }
+      }
+
+      // Special rooms
+      const typeId = specialRooms[roomKey];
+      if (typeId != null && typeToClass.hasOwnProperty(typeId)) {
+        const overlay = document.createElement('div');
+        overlay.className = `overlay ${typeToClass[typeId]}`;
+        tile.appendChild(overlay);
+        tooltipTexts.push(typeIdToName[typeId] || `Special ${typeId}`);
+        hasContent = true;
+      }
+
+      // Completed marker
+      if (donePositions.has(roomKey)) {
+        const done = document.createElement('div');
+        done.className = 'overlay done-overlay';
+        done.textContent = '✓';
+        tile.appendChild(done);
+      }
+
+      // Tooltip
+      if (hasContent && tooltipTexts.length > 0) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tile-tooltip';
+        tooltip.textContent = tooltipTexts.join('\n');
+        tile.appendChild(tooltip);
+      }
+
+      container.appendChild(tile);
     }
+  }
+}
 
-    const empty = '<div class="axis-label"></div>';
-    document.getElementById('mapGrid').innerHTML = `
-      ${empty}${axisLabels}${empty}
-      ${mapRows}
-      ${empty}${axisLabels}${empty}
-    `;
+function renderGates(map, gates) {
+  const rows = map.length;
+  const cols = map[0]?.length || 0;
+  document.querySelectorAll('.keystone').forEach(el => el.remove());
+
+  for (const gateId in gates) {
+    if (!gates.hasOwnProperty(gateId)) continue;
+    const gate = gates[gateId];
+    const nodeId = gate.Node;
+    const dir = gate.Dir;
+    const x_node = (nodeId % 100) + 1;
+    const y_node = Math.floor(nodeId / 100) + 1;
+
+    let x1, y1, x2, y2;
+    if (dir === 0) {       // вверх
+      y1 = y_node - 1; x1 = x_node;
+      y2 = y_node;     x2 = x_node;
+    } else if (dir === 1) { // вправо
+      y1 = y_node; x1 = x_node;
+      y2 = y_node; x2 = x_node + 1;
+    } else if (dir === 2) { // вниз
+      y1 = y_node; x1 = x_node;
+      y2 = y_node + 1; x2 = x_node;
+    } else if (dir === 3) { // влево
+      y1 = y_node; x1 = x_node;
+      y2 = y_node; x2 = x_node - 1;
+    } else continue;
+
+    if (y1 < 0 || y1 >= rows + 1 || x1 < 0 || x1 >= cols + 1) continue;
+    if (y2 < 0 || y2 >= rows +1 || x2 < 0 || x2 >= cols + 1) continue;
+
+    const cx1 = x1 * 32 + 16;
+    const cy1 = y1 * 32 + 16;
+    const cx2 = x2 * 32 + 16;
+    const cy2 = y2 * 32 + 16;
+    const midX = (cx1 + cx2) / 2;
+    const midY = (cy1 + cy2) / 2;
+
+    const img = document.createElement('img');
+    img.src = `tiles/keystones${gateId}.png`;
+    img.className = 'keystone';
+    img.style.left = `${midX - 16}px`;
+    img.style.top = `${midY - 16}px`;
+    container.appendChild(img);
+  }
+}
+
+function addCoordinateLabels(map) {
+  const rows = map.length;
+  const cols = map[0]?.length || 0;
+  document.querySelectorAll('.y-label, .y-label-right, .x-label, .x-label-top').forEach(el => el.remove());
+
+  for (let y = 0; y < rows; y++) {
+    const labelL = document.createElement('div');
+    labelL.className = 'y-label';
+    labelL.style.top = `${(y + 1) * 32}px`;
+    labelL.textContent = y;
+    container.appendChild(labelL);
+
+    const labelR = document.createElement('div');
+    labelR.className = 'y-label-right';
+    labelR.style.top = `${(y + 1) * 32}px`;
+    labelR.textContent = y;
+    container.appendChild(labelR);
   }
 
-  function showError(msg) {
-    const el = document.getElementById('errorBox');
-    el.textContent = msg;
-    el.style.display = 'block';
+  for (let x = 0; x < cols; x++) {
+    const labelT = document.createElement('div');
+    labelT.className = 'x-label-top';
+    labelT.style.left = `${(x + 1) * 32}px`;
+    labelT.textContent = x;
+    container.appendChild(labelT);
+
+    const labelB = document.createElement('div');
+    labelB.className = 'x-label';
+    labelB.style.left = `${(x + 1) * 32}px`;
+    labelB.textContent = x;
+    container.appendChild(labelB);
   }
+}
 
-  function hideError() {
-    document.getElementById('errorBox').style.display = 'none';
-  }
-
-  let descriptionsLoaded = false;
-  async function loadDescriptionsIfNeeded() {
-    if (!descriptionsLoaded) {
-      await loadDescriptions();
-      descriptionsLoaded = true;
-    }
-  }
-
-  async function processData(jsonData) {
-    await loadDescriptionsIfNeeded();
-    try {
-      const data = parseMapData(jsonData);
-      renderMap(data);
-      hideError();
-    } catch (e) {
-      showError("Ошибка обработки данных: " + (e.message || e));
-    }
-  }
-
-  document.getElementById('fileInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-		try {
-			const text = await file.text().then(t => t.trim());
-			if (!text) {
-				showError("Файл пуст");
-				return;
-			}
-			// Парсим JSON, чтобы убедиться, что он валиден
-			const json = JSON.parse(text);
-			// Форматируем JSON красиво (с отступами)
-			const formattedJson = JSON.stringify(json, null, 2);
-			// Обновляем текстовое поле
-			document.getElementById('jsonTextarea').value = formattedJson;
-			// Обновляем отображение карты
-			await processData(json);
-		} catch (err) {
-			showError("Некорректный JSON-файл: " + (err.message || err));
-		}
-	});
-
-  const dropZone = document.getElementById('dropZone');
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, e => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
-  });
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
-  });
-  dropZone.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length) {
-      document.getElementById('fileInput').files = files;
-      document.getElementById('fileInput').dispatchEvent(new Event('change'));
-    }
-  });
-
-	document.getElementById('submitTextBtn').addEventListener('click', async () => {
-		const textarea = document.getElementById('jsonTextarea');
-		const text = textarea.value.trim();
-		if (!text) {
-			showError('Поле JSON пусто');
-			return;
-		}
-		try {
-			// Парсим JSON для валидации
-			const json = JSON.parse(text);
-			// Форматируем и обновляем содержимое поля
-			const formattedJson = JSON.stringify(json, null, 2);
-			textarea.value = formattedJson;
-			// Обрабатываем данные и отображаем карту
-			await processData(json);
-		} catch (err) {
-			showError("Некорректный JSON: " + (err.message || err));
-		}
-	});
-
-  loadDescriptionsIfNeeded();
-  document.getElementById('submitTextBtn').click();
+// Загрузка по умолчанию
+document.getElementById('submitTextBtn').click();
 </script>
 </body>
 </html>
