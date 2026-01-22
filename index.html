@@ -447,23 +447,31 @@ dropZone.addEventListener('drop', (e) => {
   }
 });
 
-// === Вставка JSON ===
-submitTextBtn.addEventListener('click', async () => {
-  const text = jsonTextarea.value.trim();
-  if (!text) {
-    showError('Поле JSON пусто');
-    return;
-  }
+  // Сначала пробуем как есть
   try {
     const json = JSON.parse(text);
     const formatted = JSON.stringify(json, null, 2);
     jsonTextarea.value = formatted;
     await processData(json);
-  } catch (err) {
-    showError("Некорректный JSON: " + (err.message || err));
+    return;
+  } catch (firstErr) {
+    // Если ошибка — пробуем удалить все \r, \n, \t
+    const cleaned = text.replace(/[\r\n\t]/g, '');
+    if (cleaned === text) {
+      // Нечего чистить — ошибка настоящая
+      showError("Некорректный JSON: " + (firstErr.message || firstErr));
+      return;
+    }
+    try {
+      const json = JSON.parse(cleaned);
+      const formatted = JSON.stringify(json, null, 2);
+      jsonTextarea.value = formatted;
+      await processData(json);
+    } catch (secondErr) {
+      showError("Некорректный JSON: " + (firstErr.message || firstErr));
+    }
   }
 });
-
 // === Масштабирование ===
 function updateScale() {
   const rows = container.dataset.rows || 0;
