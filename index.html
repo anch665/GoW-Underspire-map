@@ -447,6 +447,14 @@ dropZone.addEventListener('drop', (e) => {
   }
 });
 
+// === Вставка JSON с автоматической очисткой переносов ===
+submitTextBtn.addEventListener('click', async () => {
+  let text = jsonTextarea.value.trim();
+  if (!text) {
+    showError('Поле JSON пусто');
+    return;
+  }
+
   // Сначала пробуем как есть
   try {
     const json = JSON.parse(text);
@@ -472,6 +480,7 @@ dropZone.addEventListener('drop', (e) => {
     }
   }
 });
+
 // === Масштабирование ===
 function updateScale() {
   const rows = container.dataset.rows || 0;
