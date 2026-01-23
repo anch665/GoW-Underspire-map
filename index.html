@@ -712,7 +712,7 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
       } else {
         const hex = value.toString(16).toUpperCase();
         const lastHexChar = hex.slice(-1);
-        if (lastHexChar >= '1' && lastHexChar <= 'E') {
+        if (lastHexChar >= '0' && lastHexChar <= 'E') {
           const bg = document.createElement('div');
           bg.className = 'tile-bg';
           bg.style.backgroundImage = `url(tiles/${lastHexChar}.png)`;
