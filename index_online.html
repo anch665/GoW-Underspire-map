@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Underspire Map Viewer (Hybrid)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Underspire Map Viewer</title>
 <style>
 /* === Общие стили === */
 body {
@@ -38,13 +38,13 @@ h2 {
   flex-direction: column;
   gap: 20px;
 }
-.upload-box {
+.upload-box, .online-box {
   background: #2d2d2d;
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
-.upload-box h3 {
+.upload-box h3, .online-box h3 {
   margin-top: 0;
   font-size: 16px;
   display: flex;
@@ -53,6 +53,10 @@ h2 {
 }
 .upload-box h3::before {
   content: "📁";
+  font-size: 18px;
+}
+.online-box h3::before {
+  content: "🌐";
   font-size: 18px;
 }
 .drop-zone {
@@ -78,7 +82,17 @@ h2 {
 .file-label:hover {
   color: #357abd;
 }
-#downloadPngBtn {
+.online-box input {
+  width: 100%;
+  padding: 5px;
+  background: #1e1e1e;
+  color: white;
+  border: 1px solid #444;
+  border-radius: 3px;
+  margin: 5px 0;
+  font-size: 13px;
+}
+.online-box button, #downloadPngBtn {
   background: #4a90e2;
   color: white;
   border: none;
@@ -90,48 +104,8 @@ h2 {
   white-space: nowrap;
   margin-top: 10px;
 }
-#downloadPngBtn:hover {
+.online-box button:hover, #downloadPngBtn:hover {
   background: #357abd;
-}
-
-/* === Онлайн-загрузка === */
-.online-box {
-  background: #2d2d2d;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-.online-box h3 {
-  margin-top: 0;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.online-box h3::before {
-  content: "🌐";
-  font-size: 18px;
-}
-.online-box input {
-  width: 100%;
-  padding: 5px;
-  background: #1e1e1e;
-  color: white;
-  border: 1px solid #444;
-  border-radius: 3px;
-  margin: 5px 0;
-  font-size: 13px;
-}
-.online-box button {
-  background: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 13px;
-  width: 100%;
-  margin-top: 10px;
 }
 
 /* === Статистика === */
@@ -336,6 +310,48 @@ h2 {
   font-size: 14px;
   display: none;
 }
+
+/* === HiDPI адаптация === */
+@media screen and (min-resolution: 1.5dppx) {
+  .tile {
+    width: 48px;
+    height: 48px;
+  }
+  .tile-bg, .overlay {
+    background-size: contain;
+  }
+  .y-label, .y-label-right, .x-label, .x-label-top {
+    font-size: 16px;
+  }
+  .legend-item {
+    font-size: 14px;
+  }
+  #map-container {
+    padding-left: 45px;
+    padding-right: 45px;
+    padding-bottom: 45px;
+    padding-top: 45px;
+  }
+}
+
+@media screen and (min-resolution: 2dppx) {
+  .tile {
+    width: 64px;
+    height: 64px;
+  }
+  .y-label, .y-label-right, .x-label, .x-label-top {
+    font-size: 20px;
+  }
+  .legend-item {
+    font-size: 16px;
+  }
+  #map-container {
+    padding-left: 60px;
+    padding-right: 60px;
+    padding-bottom: 60px;
+    padding-top: 60px;
+  }
+}
 </style>
 </head>
 <body>
@@ -416,6 +432,17 @@ const dropZone = document.getElementById('dropZone');
 const downloadPngBtn = document.getElementById('downloadPngBtn');
 const fetchOnlineMapBtn = document.getElementById('fetchOnlineMapBtn');
 const onlineNameCode = document.getElementById('onlineNameCode');
+onlineNameCode.addEventListener('input', function () {
+  // Сохраняем позицию курсора
+  const start = this.selectionStart;
+  const end = this.selectionEnd;
+
+  // Преобразуем значение в верхний регистр
+  this.value = this.value.toUpperCase();
+
+  // Восстанавливаем позицию курсора (чтобы не прыгал)
+  this.setSelectionRange(start, end);
+});
 const onlinePassword = document.getElementById('onlinePassword');
 
 let currentScale = 1.0;
@@ -478,30 +505,39 @@ dropZone.addEventListener('drop', (e) => {
   }
 });
 
-// === Масштабирование ===
+// === Масштабирование с учётом DPI ===
 function updateScale() {
   const rows = container.dataset.rows || 0;
-  const tileHeight = 32;
+  const tileHeight = 32 * window.devicePixelRatio;
   const targetHeight = window.innerHeight * 0.7;
   const mapHeight = rows * tileHeight;
   currentScale = mapHeight ? Math.min(targetHeight / mapHeight, 3) : 1;
+
   container.style.transform = `scale(${currentScale})`;
   container.style.margin = `${(1 - currentScale) * tileHeight}px 0 0 ${(1 - currentScale) * tileHeight}px`;
+
+  // Обновляем размеры тайлов для HiDPI
+  if (window.devicePixelRatio > 1) {
+    const tileSize = 32 * window.devicePixelRatio;
+    container.style.gridTemplateColumns = `repeat(${container.dataset.cols}, ${tileSize}px)`;
+    document.querySelectorAll('.tile').forEach(el => {
+      el.style.width = `${tileSize}px`;
+      el.style.height = `${tileSize}px`;
+    });
+  }
 }
 window.addEventListener('resize', updateScale);
 
 // === Онлайн-загрузка карты ===
 async function fetchOnlineMap(nameCode, password) {
   try {
-    // Вычисляем LiveEventId как в bash: UTC-7 → смещение +7 часов
     const nowUtc = Date.now();
-    const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000; // UTC-7 = UTC + 7h
+    const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
     const unixWeeks = Math.floor(nowUtcMinus7 / 1000 / 604800);
     const LiveEventId = unixWeeks - 2506;
 
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
-    // Первый запрос: get_hero_profile → username
     const profileReq = {
       functionName: "get_hero_profile",
       NameCode: nameCode
@@ -521,7 +557,6 @@ async function fetchOnlineMap(nameCode, password) {
       throw new Error("Не удалось получить username по NameCode");
     }
 
-    // Второй запрос: live_event_get_info
     const mapReq = {
       functionName: "live_event_get_info",
       username: username,
@@ -539,7 +574,6 @@ async function fetchOnlineMap(nameCode, password) {
     if (!resp2.ok) throw new Error(`Ошибка карты: ${resp2.status} ${resp2.statusText}`);
     const mapData = await resp2.json();
 
-    // Передаём в обработчик
     await processData(mapData);
 
   } catch (err) {
@@ -548,7 +582,6 @@ async function fetchOnlineMap(nameCode, password) {
   }
 }
 
-// Кнопка "Карта Онлайн"
 fetchOnlineMapBtn.addEventListener('click', () => {
   const nameCode = onlineNameCode.value.trim();
   const password = onlinePassword.value;
@@ -872,15 +905,16 @@ function addCoordinateLabels(map) {
   }
 }
 
-// === Скачать как PNG (только карту, без серого фона) ===
+// === Скачать как PNG (только карту) ===
 downloadPngBtn.addEventListener('click', async () => {
   try {
-    // Экспортируем только #map-container, а не весь wrapper
+    const scale = window.devicePixelRatio || 1;
     const canvas = await html2canvas(container, {
-      backgroundColor: '#111', // фон карты
-      scale: 2,
+      backgroundColor: '#111',
+      scale: scale,
       useCORS: true,
-      allowTaint: true
+      allowTaint: true,
+      logging: false
     });
     const link = document.createElement('a');
     link.download = 'underspire_map.png';
