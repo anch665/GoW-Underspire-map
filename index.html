@@ -539,7 +539,7 @@ async function fetchOnlineMap(nameCode, password) {
     // Сохраняем для экспорта
     currentLiveEventId = LiveEventId;
     
-    console.log(`Загрузка карты для ${nameCode}, LiveEventId: ${LiveEventId}`);
+    // console.log(`Загрузка карты для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
@@ -581,7 +581,7 @@ async function fetchOnlineMap(nameCode, password) {
     lastDataJson = mapData;
     await processData(mapData);
     
-    console.log(`Карта успешно загружена для ${nameCode}, LiveEventId: ${LiveEventId}`);
+    //console.log(`Карта успешно загружена для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
   } catch (err) {
     console.error("Онлайн-загрузка не удалась:", err);
@@ -599,7 +599,7 @@ fetchOnlineMapBtn.addEventListener('click', () => {
   fetchOnlineMap(nameCode, password);
 });
 
-// Функция экспорта JSON (только UnderspireData)
+// Функция экспорта JSON (только UnderspireData без Seed)
 function exportToJson() {
   if (!lastDataJson) {
     showError("Нет данных для экспорта. Сначала загрузите карту.");
@@ -614,28 +614,37 @@ function exportToJson() {
   
   const nameCode = onlineNameCode.value.trim().toUpperCase();
   const eventId = currentLiveEventId || 'unknown';
-  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const now = new Date();
   
   // Создаем имя файла
-  let filename = 'underspire.json';
+  let filename = 'underspire_export.json';
+  //if (nameCode) {
+  //  filename = `underspire_${nameCode}_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.json`;
+  //}
+  //let filename = 'underspire.json';
   if (nameCode) {
-    filename = `underspire_${nameCode}_${eventId}_${date}.json`;
+    filename = `underspire_${nameCode}_${eventId}_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`;
   } else {
-    filename = `underspire_${eventId}_${date}.json`;
+    filename = `underspire_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`;
+  }  
+  // Создаем глубокую копию UnderspireData
+  const exportUnderspireData = JSON.parse(JSON.stringify(underspireData));
+  
+  // Удаляем только поле Seed, если оно существует
+  if (exportUnderspireData.Seed !== undefined) {
+    delete exportUnderspireData.Seed;
   }
   
-  // Создаем объект для экспорта в ТОЧНОЙ оригинальной структуре
+  // Создаем ТОЧНУЮ копию оригинальной структуры
   const exportData = {
     "result": {
       "Info": {
-        "UnderspireData": underspireData
+        "UnderspireData": exportUnderspireData
       }
     }
   };
   
-  // Добавляем метаданные только для информации, не меняя структуру
-  console.log(`Экспорт UnderspireData: карта ${exportData.result.Info.UnderspireData.Map?.length}x${exportData.result.Info.UnderspireData.Map?.[0]?.length || 0}`);
-  console.log(`Метаданные: source=${nameCode || 'unknown'}, liveEventId=${eventId}`);
+  //console.log(`Экспорт UnderspireData: карта ${exportData.result.Info.UnderspireData.Map?.length}x${exportData.result.Info.UnderspireData.Map?.[0]?.length || 0}`);
   
   // Создаем Blob с данными
   const jsonString = JSON.stringify(exportData, null, 2);
@@ -655,7 +664,8 @@ function exportToJson() {
   // Освобождаем память
   setTimeout(() => URL.revokeObjectURL(url), 100);
   
-  console.log(`UnderspireData экспортирована в файл: ${filename}`);
+  console.log(`Файл экспортирован: ${filename}`);
+  console.log('Этот файл можно загрузить обратно через "Upload JSON file"');
 }
 
 // Обработчик кнопки Save JSON
