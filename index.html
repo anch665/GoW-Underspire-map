@@ -94,6 +94,7 @@ h2 {
 }
 .online-box button,
 #downloadPngBtn,
+#downloadJsonBtn,
 #tileSizeSelectBtn {
   background: #4a90e2;
   color: white;
@@ -110,6 +111,12 @@ h2 {
 #downloadPngBtn:hover,
 #tileSizeSelectBtn:hover {
   background: #357abd;
+}
+#downloadJsonBtn {
+  background: #2e7d32;
+}
+#downloadJsonBtn:hover {
+  background: #1b5e20;
 }
 
 /* === Статистика === */
@@ -384,6 +391,7 @@ h2 {
     <div class="upload-box">
       <h3>Export</h3>
       <button type="button" id="downloadPngBtn">Download map (PNG)</button>
+      <button type="button" id="downloadJsonBtn">Save JSON</button>
     </div>
     <div class="upload-box">
       <h3>Options</h3>
@@ -440,6 +448,7 @@ const errorBox = document.getElementById('errorBox');
 const fileInput = document.getElementById('fileInput');
 const dropZone = document.getElementById('dropZone');
 const downloadPngBtn = document.getElementById('downloadPngBtn');
+const downloadJsonBtn = document.getElementById('downloadJsonBtn');
 const fetchOnlineMapBtn = document.getElementById('fetchOnlineMapBtn');
 const onlineNameCode = document.getElementById('onlineNameCode');
 const onlinePassword = document.getElementById('onlinePassword');
@@ -449,6 +458,7 @@ const tileSizeModal = document.getElementById('tileSizeModal');
 
 let tileSize = 48;
 let lastDataJson = null;
+let currentLiveEventId = null; // Для экспорта JSON
 
 // Автоматический верхний регистр
 onlineNameCode.addEventListener('input', function () {
@@ -490,6 +500,7 @@ fileInput.addEventListener('change', async (e) => {
     const text = await file.text();
     const json = JSON.parse(text.trim());
     lastDataJson = json;
+    currentLiveEventId = null; // Сбрасываем для загруженных файлов
     await processData(json);
   } catch (err) {
     showError("Ошибка при загрузке файла: " + (err.message || err));
@@ -524,6 +535,11 @@ async function fetchOnlineMap(nameCode, password) {
     const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
     const unixWeeks = Math.floor(nowUtcMinus7 / 1000 / 604800);
     const LiveEventId = unixWeeks - 2506;
+    
+    // Сохраняем для экспорта
+    currentLiveEventId = LiveEventId;
+    
+    console.log(`Загрузка карты для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
@@ -564,6 +580,8 @@ async function fetchOnlineMap(nameCode, password) {
     const mapData = await resp2.json();
     lastDataJson = mapData;
     await processData(mapData);
+    
+    console.log(`Карта успешно загружена для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
   } catch (err) {
     console.error("Онлайн-загрузка не удалась:", err);
@@ -580,6 +598,68 @@ fetchOnlineMapBtn.addEventListener('click', () => {
   }
   fetchOnlineMap(nameCode, password);
 });
+
+// Функция экспорта JSON (только UnderspireData)
+function exportToJson() {
+  if (!lastDataJson) {
+    showError("Нет данных для экспорта. Сначала загрузите карту.");
+    return;
+  }
+  
+  const underspireData = lastDataJson?.result?.Info?.UnderspireData;
+  if (!underspireData) {
+    showError("Не найдены данные UnderspireData в загруженном файле.");
+    return;
+  }
+  
+  const nameCode = onlineNameCode.value.trim().toUpperCase();
+  const eventId = currentLiveEventId || 'unknown';
+  const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  // Создаем имя файла
+  let filename = 'underspire.json';
+  if (nameCode) {
+    filename = `underspire_${nameCode}_${eventId}_${date}.json`;
+  } else {
+    filename = `underspire_${eventId}_${date}.json`;
+  }
+  
+  // Создаем объект для экспорта в ТОЧНОЙ оригинальной структуре
+  const exportData = {
+    "result": {
+      "Info": {
+        "UnderspireData": underspireData
+      }
+    }
+  };
+  
+  // Добавляем метаданные только для информации, не меняя структуру
+  console.log(`Экспорт UnderspireData: карта ${exportData.result.Info.UnderspireData.Map?.length}x${exportData.result.Info.UnderspireData.Map?.[0]?.length || 0}`);
+  console.log(`Метаданные: source=${nameCode || 'unknown'}, liveEventId=${eventId}`);
+  
+  // Создаем Blob с данными
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  
+  // Создаем ссылку для скачивания
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  
+  // Добавляем на страницу, кликаем и удаляем
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  // Освобождаем память
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+  
+  console.log(`UnderspireData экспортирована в файл: ${filename}`);
+}
+
+// Обработчик кнопки Save JSON
+downloadJsonBtn.addEventListener('click', exportToJson);
 
 // Обработка данных
 async function processData(dataJson) {
@@ -656,11 +736,16 @@ async function processData(dataJson) {
           const roomKey = `${y},${x}`;
           const isDone = donePositions.has(roomKey);
           if (isDone) openedAllCount++;
+		  //console.log(`done: ${y},${x} ${isDone}`);
           const typeId = specialMap[roomKey];
           const isAutoByType = typeId != null && AUTO_TYPE_IDS.has(typeId);
           const isAutoByValue = isAutoRoomByValue(value);
           const isAuto = isAutoByType || isAutoByValue;
-          if (!isAuto && !isDone) progressRemaining++;
+          if (!isAuto && !isDone) {
+			progressRemaining++
+			// console.log(`done: ${y},${x} ${isDone}`);
+		  };
+		  
         }
       }
       return { totalRooms, openedAll: openedAllCount, progressRemaining };
@@ -695,7 +780,7 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
   container.dataset.cols = cols;
   container.style.gridTemplateColumns = `repeat(${cols}, ${size}px)`;
   container.innerHTML = '';
-  container.style.padding = "0"; // ← ключевое исправление
+  container.style.padding = "0";
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -824,7 +909,6 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
   }
 }
 
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ
 function renderGates(map, gates, size) {
   const rows = map.length;
   const cols = map[0]?.length || 0;
@@ -960,6 +1044,36 @@ window.addEventListener('click', (e) => {
   }
 });
 
+// Добавляем глобальные функции для отладки
+window.debugMapViewer = {
+  showCredentials: function() {
+    return {
+      nameCode: document.getElementById('onlineNameCode').value,
+      password: document.getElementById('onlinePassword').value
+    };
+  },
+  
+  showLastData: function() {
+    return lastDataJson;
+  },
+  
+  showMapInfo: function() {
+    if (!lastDataJson) return null;
+    const map = lastDataJson.result?.Info?.UnderspireData?.Map;
+    return {
+      rows: map?.length || 0,
+      cols: map?.[0]?.length || 0,
+      completed: lastDataJson.result?.Info?.UnderspireData?.Completed?.length || 0,
+      extraRooms: lastDataJson.result?.Info?.UnderspireData?.ExtraRooms?.length || 0,
+      liveEventId: currentLiveEventId
+    };
+  },
+  
+  exportJson: exportToJson // Делаем функцию экспорта доступной из консоли
+};
+
+console.log('Underspire Map Viewer debug доступен через window.debugMapViewer');
+
 // Загрузка по умолчанию
 (async () => {
   try {
@@ -967,6 +1081,7 @@ window.addEventListener('click', (e) => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     lastDataJson = data;
+    currentLiveEventId = null;
     await processData(data);
   } catch (err) {
     showError('Не удалось загрузить map.json: ' + (err.message || err));
