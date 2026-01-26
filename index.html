@@ -215,7 +215,7 @@ h2 {
   z-index: 5;
 }
 .y-label {
-  left: -30px; /* вынесено за пределы контейнера */
+  left: -30px;
 }
 .y-label-right {
   right: -30px;
@@ -247,20 +247,23 @@ h2 {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-	background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.85);
   color: #fff;
   padding: 4px 8px;
-  border-radius: 1px;
+  border-radius: 3px; /* чуть больше для красоты */
   font-size: 12px;
-  white-space: pre-line;
+  /* Убираем ограничения ширины */
+  width: max-content;
+  min-width: unset;
+  max-width: unset;
+  /* Разрешаем перенос только по символам \n, но не внутри строк */
+  white-space: pre-line; /* сохраняет \n, но позволяет перенос при необходимости */
+  word-break: break-word; /* на случай очень длинных слов без пробелов */
+  text-align: center;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
   z-index: 20;
-  max-width: 150px;
-  min-width: 150px;
-  word-break: pre-line;
-  text-align: center;
 }
 .tile:hover .tile-tooltip {
   opacity: 1;
@@ -366,16 +369,18 @@ h2 {
       <div id="mapStats" class="stats" style="display:none;"></div>
     </div>
     <!-- Онлайн-загрузка -->
-    <div class="online-box">
-      <h3>Get Map Online</h3>
-      <label>Invite Code:
-        <input type="text" id="onlineNameCode" value="" placeholder="Invite code">
-      </label>
-      <label>Password:
-        <input type="password" id="onlinePassword" value="" placeholder="Your password">
-      </label>
-      <button type="button" id="fetchOnlineMapBtn">Get Map</button>
-    </div>
+		<div class="online-box">
+			<h3>Get Map Online</h3>
+			<form id="onlineForm">
+				<label>Invite Code:
+					<input type="text" id="onlineNameCode" value="" placeholder="Invite code" autocomplete="username">
+				</label>
+				<label>Password:
+					<input type="password" id="onlinePassword" value="" placeholder="Your password" autocomplete="current-password">
+				</label>
+				<button type="submit">Get Map</button>
+			</form>
+		</div>
 
     <!-- Загрузка файла -->
     <div class="upload-box">
@@ -405,27 +410,6 @@ h2 {
       <div id="map-container"></div>
     </div>
   </div>
-
-  <!-- Правая панель: легенда -->
-  <!--div class="legend">
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/oracle.png)"></div><span>Oracle</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/secret.png)"></div><span>Secret</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/trinket.png)"></div><span>Trinket</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/powder.png)"></div><span>Powder</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/cursedmine.png)"></div><span>Cursed Mine</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure.png)"></div><span>Treasure</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/entrance.png)"></div><span>Entrance</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/merchant.png)"></div><span>Merchant</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/boss1-6.png)"></div><span>Boss 1–6</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/boss7.png)"></div><span>Boss 7</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/trap.png)"></div><span>Trap</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard1.png)"></div><span>TG Common</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard2.png)"></div><span>TG Rare</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard3.png)"></div><span>TG Ultra-Rare</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard4.png)"></div><span>TG Epic</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard5.png)"></div><span>TG Legendary</span></div>
-    <div class="legend-item"><div class="legend-color" style="background-image:url(tiles/treasure_guard6.png)"></div><span>TG Mythic</span></div>
-  </div-->
 </div>
 
 <!-- Модальное окно выбора размера -->
@@ -455,10 +439,20 @@ const onlinePassword = document.getElementById('onlinePassword');
 const tileSizeSelectBtn = document.getElementById('tileSizeSelectBtn');
 const currentTileSizeEl = document.getElementById('currentTileSize');
 const tileSizeModal = document.getElementById('tileSizeModal');
+document.getElementById('onlineForm').addEventListener('submit', (e) => {
+  e.preventDefault(); // предотвращаем перезагрузку страницы
+  const nameCode = onlineNameCode.value.trim();
+  const password = onlinePassword.value;
+  if (!nameCode || !password) {
+    showError("Введите NameCode и пароль");
+    return;
+  }
+  fetchOnlineMap(nameCode, password);
+});
 
 let tileSize = 48;
 let lastDataJson = null;
-let currentLiveEventId = null; // Для экспорта JSON
+let currentLiveEventId = null;
 
 // Автоматический верхний регистр
 onlineNameCode.addEventListener('input', function () {
@@ -500,7 +494,7 @@ fileInput.addEventListener('change', async (e) => {
     const text = await file.text();
     const json = JSON.parse(text.trim());
     lastDataJson = json;
-    currentLiveEventId = null; // Сбрасываем для загруженных файлов
+    currentLiveEventId = null;
     await processData(json);
   } catch (err) {
     showError("Ошибка при загрузке файла: " + (err.message || err));
@@ -535,11 +529,7 @@ async function fetchOnlineMap(nameCode, password) {
     const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
     const unixWeeks = Math.floor(nowUtcMinus7 / 1000 / 604800);
     const LiveEventId = unixWeeks - 2506;
-    
-    // Сохраняем для экспорта
     currentLiveEventId = LiveEventId;
-    
-    // console.log(`Загрузка карты для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
@@ -580,15 +570,13 @@ async function fetchOnlineMap(nameCode, password) {
     const mapData = await resp2.json();
     lastDataJson = mapData;
     await processData(mapData);
-    
-    //console.log(`Карта успешно загружена для ${nameCode}, LiveEventId: ${LiveEventId}`);
 
   } catch (err) {
     console.error("Онлайн-загрузка не удалась:", err);
     showError("Ошибка онлайн-загрузки: " + (err.message || err));
   }
 }
-
+/*
 fetchOnlineMapBtn.addEventListener('click', () => {
   const nameCode = onlineNameCode.value.trim();
   const password = onlinePassword.value;
@@ -598,8 +586,8 @@ fetchOnlineMapBtn.addEventListener('click', () => {
   }
   fetchOnlineMap(nameCode, password);
 });
-
-// Функция экспорта JSON (только UnderspireData без Seed)
+*/
+// Функция экспорта JSON
 function exportToJson() {
   if (!lastDataJson) {
     showError("Нет данных для экспорта. Сначала загрузите карту.");
@@ -616,26 +604,15 @@ function exportToJson() {
   const eventId = currentLiveEventId || 'unknown';
   const now = new Date();
   
-  // Создаем имя файла
-  let filename = 'underspire_export.json';
-  //if (nameCode) {
-  //  filename = `underspire_${nameCode}_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.json`;
-  //}
-  //let filename = 'underspire.json';
-  if (nameCode) {
-    filename = `underspire_${nameCode}_${eventId}_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`;
-  } else {
-    filename = `underspire_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`;
-  }  
-  // Создаем глубокую копию UnderspireData
-  const exportUnderspireData = JSON.parse(JSON.stringify(underspireData));
+  let filename = nameCode
+    ? `underspire_${nameCode}_${eventId}_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`
+    : `underspire_${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}.json`;
   
-  // Удаляем только поле Seed, если оно существует
+  const exportUnderspireData = JSON.parse(JSON.stringify(underspireData));
   if (exportUnderspireData.Seed !== undefined) {
     delete exportUnderspireData.Seed;
   }
   
-  // Создаем ТОЧНУЮ копию оригинальной структуры
   const exportData = {
     "result": {
       "Info": {
@@ -644,31 +621,18 @@ function exportToJson() {
     }
   };
   
-  //console.log(`Экспорт UnderspireData: карта ${exportData.result.Info.UnderspireData.Map?.length}x${exportData.result.Info.UnderspireData.Map?.[0]?.length || 0}`);
-  
-  // Создаем Blob с данными
   const jsonString = JSON.stringify(exportData, null, 2);
   const blob = new Blob([jsonString], { type: 'application/json' });
-  
-  // Создаем ссылку для скачивания
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
-  
-  // Добавляем на страницу, кликаем и удаляем
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  
-  // Освобождаем память
   setTimeout(() => URL.revokeObjectURL(url), 100);
-  
-  console.log(`Файл экспортирован: ${filename}`);
-  console.log('Этот файл можно загрузить обратно через "Upload JSON file"');
 }
 
-// Обработчик кнопки Save JSON
 downloadJsonBtn.addEventListener('click', exportToJson);
 
 // Обработка данных
@@ -684,6 +648,7 @@ async function processData(dataJson) {
     const collected = underspire.Collected || [];
     const gates = underspire.Gates || {};
     const bossRoomInfo = underspire.BossRoomInfo || {};
+    const treasureRoomInfo = underspire.TreasureRoomInfo || {};
 
     if (!map || !Array.isArray(map) || map.length === 0 || !Array.isArray(map[0])) {
       throw new Error('Некорректный массив карты');
@@ -696,6 +661,15 @@ async function processData(dataJson) {
       const y = Math.floor(roomId / 100);
       const x = roomId % 100;
       bossPositions[`${y},${x}`] = { id: bossId };
+    }
+
+    const treasurePositions = {};
+    for (const [roomIdStr, treasureId] of Object.entries(treasureRoomInfo)) {
+      const roomId = parseInt(roomIdStr, 10);
+      if (isNaN(roomId)) continue;
+      const y = Math.floor(roomId / 100);
+      const x = roomId % 100;
+      treasurePositions[`${y},${x}`] = treasureId;
     }
 
     const specialRooms = {};
@@ -746,16 +720,13 @@ async function processData(dataJson) {
           const roomKey = `${y},${x}`;
           const isDone = donePositions.has(roomKey);
           if (isDone) openedAllCount++;
-		  //console.log(`done: ${y},${x} ${isDone}`);
           const typeId = specialMap[roomKey];
           const isAutoByType = typeId != null && AUTO_TYPE_IDS.has(typeId);
           const isAutoByValue = isAutoRoomByValue(value);
           const isAuto = isAutoByType || isAutoByValue;
           if (!isAuto && !isDone) {
-			progressRemaining++
-			// console.log(`done: ${y},${x} ${isDone}`);
-		  };
-		  
+            progressRemaining++;
+          }
         }
       }
       return { totalRooms, openedAll: openedAllCount, progressRemaining };
@@ -769,7 +740,7 @@ async function processData(dataJson) {
     `;
     statsEl.style.display = 'block';
 
-    renderMap(map, specialRooms, donePositions, bossPositions, tileSize);
+    renderMap(map, specialRooms, donePositions, bossPositions, treasurePositions, tileSize);
     renderGates(map, gates, tileSize);
     addCoordinateLabels(map, tileSize);
 
@@ -783,7 +754,7 @@ async function processData(dataJson) {
 const typeToClass = {0:'oracle-overlay',1:'secret-overlay',2:'trinket-overlay',3:'powder-overlay',4:'cursedmine-overlay',5:'treasure-overlay'};
 const typeIdToName = {0:'Oracle',1:'Secret',2:'Trinket',3:'Powder',4:'Cursed Mine',5:'Treasure'};
 
-function renderMap(map, specialRooms, donePositions, bossPositions, size) {
+function renderMap(map, specialRooms, donePositions, bossPositions, treasurePositions, size) {
   const rows = map.length;
   const cols = map[0]?.length || 0;
   container.dataset.rows = rows;
@@ -827,13 +798,19 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
             const guard = document.createElement('div');
             guard.className = 'overlay treasure-guard-overlay';
             guard.style.backgroundImage = `url(tiles/treasure_guard${guardNum}.png)`;
+            const guardScale = 0.75;
+            guard.style.transform = `scale(${guardScale})`;
+            guard.style.transformOrigin = 'center center';
             tile.appendChild(guard);
-            tooltipTexts.push(guardName);
+            tooltipTexts.push(guardName); // ← сохраняем базовое имя
             hasContent = true;
           }
           if (penultimate === '1') {
             const entrance = document.createElement('div');
             entrance.className = 'overlay entrance-overlay';
+            const entranceScale = 0.8;
+            entrance.style.transform = `scale(${entranceScale})`;
+            entrance.style.transformOrigin = 'center center';
             tile.appendChild(entrance);
             tooltipTexts.push('Entrance');
             hasContent = true;
@@ -841,6 +818,9 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
           if (penultimate === 'C') {
             const trap = document.createElement('div');
             trap.className = 'overlay trap-overlay';
+            const trapScale = 0.55;
+            trap.style.transform = `scale(${trapScale})`;
+            trap.style.transformOrigin = 'center center';
             tile.appendChild(trap);
             tooltipTexts.push('Trap');
             hasContent = true;
@@ -848,6 +828,9 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
           if (penultimate === 'B') {
             const merchant = document.createElement('div');
             merchant.className = 'overlay merchant-overlay';
+            const merchantScale = 0.85;
+            merchant.style.transform = `scale(${merchantScale})`;
+            merchant.style.transformOrigin = 'center center';
             tile.appendChild(merchant);
             tooltipTexts.push('Merchant');
             hasContent = true;
@@ -856,14 +839,20 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
       }
 
       const roomKey = `${y},${x}`;
+
+      // === Боссы ===
       if (bossPositions[roomKey]) {
         const { id } = bossPositions[roomKey];
-        const desc = bossInfoMap[id] || `BOSS ? (ID: ${id})`;
+        const desc = bossInfoMap[id] || `Неизвестный босс (ID: ${id})`;
         const parts = desc.split(/,\s*/);
-        const bossLevelStr = parts[0] || '';
-        let levelNum = -1;
-        if (bossLevelStr.startsWith('BOSS ')) levelNum = parseInt(bossLevelStr.slice(5), 10);
-        if (levelNum >= 1 && levelNum <= 6) {
+        const bossScale = 0.75;
+        if (id === 16166) {
+          const boss = document.createElement('div');
+          boss.className = 'overlay boss7-overlay';
+          boss.style.transform = `scale(${bossScale})`;
+          boss.style.transformOrigin = 'center center';
+          tile.appendChild(boss);
+        } else {
           const img = document.createElement('img');
           img.src = `tiles/boss1-6.png`;
           img.className = 'overlay';
@@ -874,32 +863,38 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
             width: '100%',
             height: '100%',
             imageRendering: 'pixelated',
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            transform: `scale(${bossScale})`,
+            transformOrigin: 'center center'
           });
           tile.appendChild(img);
-          tooltipTexts.push(...parts);
-          hasContent = true;
-        } else if (levelNum === 7) {
-          const boss = document.createElement('div');
-          boss.className = 'overlay boss7-overlay';
-          tile.appendChild(boss);
-          tooltipTexts.push(...parts);
-          hasContent = true;
-        } else {
-          tooltipTexts.push(`Неизвестный босс: ${desc}`);
-          hasContent = true;
         }
+        tooltipTexts.push(...parts);
+        hasContent = true;
       }
 
+      // === Сокровища: добавляем описание из TreasureInfo, если есть ===
+      const treasureId = treasurePositions[roomKey];
+      if (treasureId != null) {
+        const desc = treasureInfoMap[treasureId] || `Неизвестное сокровище (ID: ${treasureId})`;
+        const parts = desc.split(/,\s*/);
+        tooltipTexts.push(...parts); // ← добавляем к уже существующему (например, "TG Common")
+      }
+
+      // === Special Rooms ===
       const typeId = specialRooms[roomKey];
       if (typeId != null && typeToClass.hasOwnProperty(typeId)) {
         const overlay = document.createElement('div');
         overlay.className = `overlay ${typeToClass[typeId]}`;
+        const overlayScale = 0.85;
+        overlay.style.transform = `scale(${overlayScale})`;
+        overlay.style.transformOrigin = 'center center';
         tile.appendChild(overlay);
         tooltipTexts.push(typeIdToName[typeId] || `Special ${typeId}`);
         hasContent = true;
       }
 
+      // === Done marker ===
       if (donePositions.has(roomKey)) {
         const done = document.createElement('div');
         done.className = 'overlay done-overlay';
@@ -907,6 +902,7 @@ function renderMap(map, specialRooms, donePositions, bossPositions, size) {
         tile.appendChild(done);
       }
 
+      // === Tooltip ===
       if (hasContent && tooltipTexts.length > 0) {
         const tooltip = document.createElement('div');
         tooltip.className = 'tile-tooltip';
@@ -924,6 +920,7 @@ function renderGates(map, gates, size) {
   const cols = map[0]?.length || 0;
   document.querySelectorAll('.keystone').forEach(el => el.remove());
 
+  const keystoneScale = 0.75;
   for (const gateId in gates) {
     if (!gates.hasOwnProperty(gateId)) continue;
     const gate = gates[gateId];
@@ -932,7 +929,6 @@ function renderGates(map, gates, size) {
 
     const roomX = nodeId % 100;
     const roomY = Math.floor(nodeId / 100);
-
     if (roomY < 0 || roomY >= rows || roomX < 0 || roomX >= cols) continue;
 
     let neighborX = roomX, neighborY = roomY;
@@ -941,26 +937,23 @@ function renderGates(map, gates, size) {
     else if (dir === 2) neighborY++;
     else if (dir === 3) neighborX--;
     else continue;
-
     if (neighborY < 0 || neighborY >= rows || neighborX < 0 || neighborX >= cols) continue;
 
-    // Центры комнат (начинаются с 0,0)
     const centerX1 = (roomX + 0.5) * size;
     const centerY1 = (roomY + 0.5) * size;
     const centerX2 = (neighborX + 0.5) * size;
     const centerY2 = (neighborY + 0.5) * size;
-
     const midX = (centerX1 + centerX2) / 2;
     const midY = (centerY1 + centerY2) / 2;
-
-    const keystoneLeft = midX - size / 2;
-    const keystoneTop = midY - size / 2;
+    const iconSize = size * keystoneScale;
+    const keystoneLeft = midX - iconSize / 2;
+    const keystoneTop = midY - iconSize / 2;
 
     const img = document.createElement('img');
     img.src = `tiles/keystones${gateId}.png`;
     img.className = 'keystone';
-    img.style.width = `${size}px`;
-    img.style.height = `${size}px`;
+    img.style.width = `${iconSize}px`;
+    img.style.height = `${iconSize}px`;
     img.style.left = `${keystoneLeft}px`;
     img.style.top = `${keystoneTop}px`;
     container.appendChild(img);
@@ -972,7 +965,6 @@ function addCoordinateLabels(map, size) {
   const cols = map[0]?.length || 0;
   document.querySelectorAll('.y-label, .y-label-right, .x-label, .x-label-top').forEach(el => el.remove());
 
-  // Y labels
   for (let y = 0; y < rows; y++) {
     const labelL = document.createElement('div');
     labelL.className = 'y-label';
@@ -991,7 +983,6 @@ function addCoordinateLabels(map, size) {
     container.appendChild(labelR);
   }
 
-  // X labels
   for (let x = 0; x < cols; x++) {
     const labelT = document.createElement('div');
     labelT.className = 'x-label-top';
@@ -1054,7 +1045,8 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// Добавляем глобальные функции для отладки
+// Отладка
+/*
 window.debugMapViewer = {
   showCredentials: function() {
     return {
@@ -1062,11 +1054,9 @@ window.debugMapViewer = {
       password: document.getElementById('onlinePassword').value
     };
   },
-  
   showLastData: function() {
     return lastDataJson;
   },
-  
   showMapInfo: function() {
     if (!lastDataJson) return null;
     const map = lastDataJson.result?.Info?.UnderspireData?.Map;
@@ -1078,12 +1068,11 @@ window.debugMapViewer = {
       liveEventId: currentLiveEventId
     };
   },
-  
-  exportJson: exportToJson // Делаем функцию экспорта доступной из консоли
+  exportJson: exportToJson
 };
 
 console.log('Underspire Map Viewer debug доступен через window.debugMapViewer');
-
+*/
 // Загрузка по умолчанию
 (async () => {
   try {
