@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Guild War Defense Data</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --panel-bg: #1a1a2a;
+      --border: #333;
+      --text: #e0e0e0;
+      --text-light: #aaa;
+      --accent: #ffd700;
+      --btn-bg: #2a3a5a;
+      --btn-hover: #3a4a7a;
+      --error-bg: #442222;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0;
+      line-height: 1;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin: 16px 0;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: var(--accent);
+      font-weight: 700;
+      text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+    }
+
+    /* === Управление (панели сверху) === */
+    .controls-row {
+      display: flex;
+      gap: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 16px;
+      flex-wrap: wrap;
+	  align-items: flex-start;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .panel-header {
+      padding: 8px 12px;
+      background: rgba(30, 30, 45, 0.8);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header::before {
+      content: "";
+      width: 16px;
+      height: 16px;
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    .panel-header.online::before {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffd700"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>');
+    }
+    .panel-header.file::before {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffd700"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 16H8v-2h8v2zm-2-4H8v-2h8v2zm-2-5H8V7h8v2z"/></svg>');
+    }
+
+    .panel-body {
+      padding: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 6px 8px;
+      background: #222;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .form-group input[type="password"] {
+      font-family: monospace;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--btn-bg);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: var(--btn-hover);
+    }
+    .btn-primary {
+      background: #4a90e2;
+    }
+    .btn-primary:hover {
+      background: #357abd;
+    }
+
+    /* === Ошибки === */
+    .error-box {
+      background: var(--error-bg);
+      padding: 14px;
+      border-radius: 6px;
+      margin: 16px auto;
+      max-width: 1600px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+      display: none;
+      width: calc(100% - 32px);
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    /* === Таблицы — ПОЛНАЯ ШИРИНА, БЕЗ ОТСТУПОВ === */
+    .tables-fullwidth {
+      width: 100%;
+      padding: 0 16px;
+      box-sizing: border-box;
+    }
+
+    .table-wrapper {
+      margin: 16px 0;
+    }
+
+    /* Заголовки таблиц — над таблицами, без обёртки */
+    .table-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--accent);
+      text-align: center;
+      margin: 20px 0 12px;
+      text-shadow: 0 0 4px rgba(255,215,0,0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+      overflow-x: auto;
+      display: block;
+      white-space: nowrap;
+    }
+	/ *
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 8px;
+      vertical-align: top;
+      height: 110px;
+      display: table-cell;
+      line-height: 1.2;
+    }
+	* /
+    th {
+      background: rgba(30, 30, 45, 0.8);
+      font-weight: 600;
+      color: var(--accent);
+    }
+	/* === ЗАГОЛОВКИ СТОЛБЦОВ ТАБЛИЦЫ === */
+	.table-header-row th {
+	  background: rgba(30, 30, 45, 0.8);
+	  font-weight: 600;
+	  color: var(--accent);
+	  border: 1px solid var(--border);
+	  padding: 6px 8px;        /* меньше padding → ниже высота */
+	  text-align: center;
+	  font-size: 12px;         /* чуть мельче */
+	  height: auto;            /* не фиксировать высоту */
+	  vertical-align: middle;
+	}
+
+	/* === СТРОКИ ДАННЫХ ТАБЛИЦЫ === */
+	.table-body-rows td {
+	  border: 1px solid var(--border);
+	  padding: 8px 8px;
+	  vertical-align: top;
+	  height: 120px;           /* оставить высокими для троопов */
+	  display: table-cell;
+	  line-height: 1.2;
+	  font-size: 13px;
+	}
+    .col-name    { 
+	  width: 20%; 
+	  white-space: normal;
+	}
+    .col-level   { width: 8%; }
+    .col-troops  { width: 40%; }
+    .col-banner  { 
+	  width: 22%;
+	  vertical-align: center;
+	  }
+    .col-class   { width: 22%; }
+
+    .section-header {
+      background: rgba(30, 30, 45, 0.8);
+      padding: 4px 10px;  
+      border-radius: 4px;
+      font-weight: 600;
+      color: var(--accent);
+      margin: 16px 0 8px;
+	  width: 30%; 
+      font-size: 16px;
+    }
+
+    /* === Троопы и иконки === */
+    .troop-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 2px 0;
+    }
+    .cw-svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .cw-svg svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .banner-icon, .class-icon {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .banner-icon img,
+    .class-icon img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 4px;
+      background: #222;
+      border: 1px solid var(--border);
+    }
+
+    /* === Для мобильных — панели стекаются, таблицы остаются full-width */
+    @media (max-width: 900px) {
+      .controls-row {
+        flex-direction: column;
+      }
+      .tables-fullwidth {
+        padding: 0;
+      }
+    }
+	/* === ДВУХКОЛОНОЧНЫЙ БЛОК ТАБЛИЦ === */
+	.tables-flex-container {
+	  display: flex;
+	  gap: 24px;
+	  padding: 0 16px;
+	  margin-top: 16px;
+	  overflow-x: auto;
+	  width: 100%;
+	  box-sizing: border-box;
+	}
+
+	.table-column {
+	  flex: 1;
+	  min-width: 0; /* позволяет сжиматься при переполнении */
+	}
+
+	.table-column > h2.table-title {
+	  margin: 0 0 8px 0;
+	  font-size: 22px;
+	}
+
+	/* Для мобильных: стекаем в колонку */
+	@media (max-width: 900px) {
+	  .tables-flex-container {
+		flex-direction: column;
+	  }
+	}
+	/* === ДВУХКОЛОНОЧНАЯ ФОРМА ВНУТРИ ПАНЕЛИ === */
+	.form-grid {
+	  display: flex;
+	  gap: 12px;
+	}
+
+	.form-col {
+	  flex: 1;
+	  min-width: 0;
+	}
+
+	/* Для мобильных: вернуть в одну колонку */
+	@media (max-width: 600px) {
+	  .form-grid {
+		flex-direction: column;
+	  }
+	}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Guild War Defense Data</h1>
+</div>
+
+<div id="errorBox" class="error-box"></div>
+
+<!-- === Управление: онлайн + файл (в одну строку) === -->
+<!-- === Управление: онлайн + файл (в одну строку) === -->
+<div class="controls-row">
+  <!-- Левая панель: Онлайн авторизация -->
+  <div class="panel">
+    <div class="panel-header online">Онлайн авторизация</div>
+    <div class="panel-body">
+      <form id="onlineForm">
+        <div class="form-grid">
+          <!-- Левая колонка: Invite Code и Password -->
+          <div class="form-col">
+            <div class="form-group">
+              <label for="inviteCode">Invite Code:</label>
+              <input type="text" id="inviteCode" placeholder="Например: ANCH665_X4SA" autocomplete="username" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Password:</label>
+              <input type="password" id="password" placeholder="Ваш пароль" autocomplete="current-password" required>
+            </div>
+          </div>
+
+          <!-- Правая колонка: День войны и кнопка -->
+          <div class="form-col">
+            <div class="form-group">
+              <label for="warDaySelect">День войны:</label>
+              <select id="warDaySelect">
+                <option value="0">Четверг</option>
+                <option value="1">Пятница</option>
+                <option value="2">Суббота</option>
+                <option value="3">Воскресенье</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Загрузить данные гильдии</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Правая панель: Загрузка из файла -->
+  <div class="panel">
+    <div class="panel-header file">Загрузить из файла</div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label>Выберите JSON-файл:</label>
+        <input type="file" id="jsonFile" accept=".json" style="display:none;">
+        <div class="btn" onclick="document.getElementById('jsonFile').click()">Выбрать файл</div>
+        <div id="fileNameDisplay" style="margin-top: 8px; font-size: 13px; color: var(--text-light);">Файл не выбран</div>
+      </div>
+      <button type="button" class="btn" onclick="loadJsonFromFile()">Загрузить JSON</button>
+    </div>
+  </div>
+</div>
+
+<!-- === ТАБЛИЦЫ — ПОЛНАЯ ШИРИНА, БЕЗ ОТСТУПОВ === -->
+<div class="tables-flex-container">
+  <!-- Левая таблица: Моя гильдия -->
+  <div class="table-column">
+    <h2 class="table-title" id="myTitle">Моя гильдия</h2>
+    <div id="myKeep"></div>
+  </div>
+
+  <!-- Правая таблица: Гильдия противника -->
+  <div class="table-column">
+    <h2 class="table-title" id="oppTitle">Гильдия противника</h2>
+    <div id="opponentKeep"></div>
+  </div>
+</div>
+
+<script>
+// =============== Константы ===============
+const LOCATION_NAMES = {
+  'Rank1Loc1': 'Святилище',
+  'Rank1Loc2': 'Поляна',
+  'Rank2Loc1': 'Портал',
+  'Rank2Loc2': 'Изготовитель луков',
+  'Rank2Loc3': 'Кухня',
+  'Rank3Loc1': 'Храм',
+  'Rank3Loc2': 'Аптекарь',
+  'Rank3Loc3': 'Лабиринт',
+  'Palace': 'Дворец'
+};
+
+const LOCATION_ORDER = [
+  'Rank1Loc1', 'Rank1Loc2', 'Rank2Loc1', 'Rank2Loc2', 'Rank2Loc3',
+  'Rank3Loc1', 'Rank3Loc2', 'Rank3Loc3', 'Palace'
+];
+
+const COLORS = {
+  brown: '#8B4513', purple: '#800080', yellow: '#FFD700',
+  red: '#FF0000', green: '#00FF00', blue: '#0000FF'
+};
+const COLOR_MASKS = {
+  brown: 1, purple: 4, yellow: 16, red: 64, green: 256, blue: 1024
+};
+
+function getActiveColors(colorNumber) {
+  const res = [];
+  for (const [name, mask] of Object.entries(COLOR_MASKS)) {
+    if (colorNumber & mask) res.push({ name, color: COLORS[name] });
+  }
+  return res;
+}
+
+function createColorWheelSVG(activeColors) {
+  const div = document.createElement('div');
+  div.className = 'cw-svg';
+  if (!activeColors || activeColors.length === 0) {
+    div.innerHTML = '<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#222"/></svg>';
+    return div;
+  }
+  if (activeColors.length === 1) {
+    const c = activeColors[0];
+    div.innerHTML = `<svg width="24" height="24" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="${c.color}"/></svg>`;
+    return div;
+  }
+  const sorted = ['brown','purple','yellow','red','green','blue']
+    .map(n => activeColors.find(c => c.name === n)).filter(Boolean);
+  const r = 45, cx = 50, cy = 50, seg = 360 / sorted.length;
+  let paths = '';
+  for (let i = 0; i < sorted.length; i++) {
+    const a1 = i * seg - 90, a2 = (i+1) * seg - 90;
+    const x1 = cx + r * Math.cos(a1 * Math.PI/180);
+    const y1 = cy + r * Math.sin(a1 * Math.PI/180);
+    const x2 = cx + r * Math.cos(a2 * Math.PI/180);
+    const y2 = cy + r * Math.sin(a2 * Math.PI/180);
+    const la = seg > 180 ? 1 : 0;
+    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${la} 1 ${x2} ${y2} Z`;
+    paths += `<path d="${d}" fill="${sorted[i].color}"/>`;
+  }
+  div.innerHTML = `<svg width="24" height="24" viewBox="0 0 100 100">${paths}</svg>`;
+  return div;
+}
+
+// =============== Кэши справочников ===============
+let weaponsCache = null, troopsCache = null, kingdomsCache = null, classesCache = null;
+const DATA_DIR = 'gems_of_war_data';
+
+async function loadJSON(filename) {
+  try {
+    const res = await fetch(`${DATA_DIR}/${filename}`);
+    if (!res.ok) throw '';
+    return await res.json();
+  } catch {
+    const res = await fetch(filename);
+    if (!res.ok) throw new Error(`Не найден ${filename}`);
+    return await res.json();
+  }
+}
+
+async function ensureLoaded() {
+  if (!weaponsCache || !troopsCache || !kingdomsCache || !classesCache) {
+    const [w, t, k, c] = await Promise.all([
+      loadJSON('Weapons_Russian.json'),
+      loadJSON('Troops_Russian.json'),
+      loadJSON('Kingdoms_Russian.json'),
+      loadJSON('ClassesDetails_Russian.json')
+    ]);
+    weaponsCache = w.weapons || w;
+    troopsCache = t.troops || t;
+    kingdomsCache = k.kingdoms || k;
+    classesCache = c.classes || c;
+  }
+}
+
+function getItemName(id) {
+  if (id >= 1000 && id <= 1999) {
+    const w = weaponsCache?.find(x => x.id == id);
+    return w ? w.name : `W:${id}`;
+  }
+  if (id >= 6000 && id <= 7999) {
+    const t = troopsCache?.find(x => x.id == id);
+    return t ? t.name : `T:${id}`;
+  }
+  return `ID:${id}`;
+}
+
+function getItemColors(id) {
+  if (id >= 1000 && id <= 1999) {
+    const w = weaponsCache?.find(x => x.id == id);
+    return w ? w.colors || 0 : 0;
+  }
+  if (id >= 6000 && id <= 7999) {
+    const t = troopsCache?.find(x => x.id == id);
+    return t ? t.colors || 0 : 0;
+  }
+  return 0;
+}
+
+function getBannerInfo(bannerId) {
+  const k = kingdomsCache?.find(x => x.id == bannerId);
+  return {
+    name: k?.bannerName || `Флаг ${bannerId}`,
+    img: k?.bannerImageUrl ? `${DATA_DIR}/banners/${k.bannerImageUrl}` : null
+  };
+}
+
+function getClassInfo(classCode) {
+  if (!classCode) return { name: '—', img: null };
+  const cls = classesCache?.find(c => c.classCode === classCode);
+  return {
+    name: cls?.name || classCode,
+    img: cls?.imageUrl ? `${DATA_DIR}/classes/${cls.imageUrl}` : null
+  };
+}
+
+// =============== Рендеринг таблиц ===============
+function renderGuildSection(containerId, data, titleElId, defaultTitle) {
+  const container = document.getElementById(containerId);
+  const titleEl = document.getElementById(titleElId);
+  titleEl.textContent = titleElId === 'myTitle' ? 'Моя гильдия' : defaultTitle;
+
+  container.innerHTML = '';
+
+  if (!data?.DefenceData) {
+    container.innerHTML = '<p style="text-align:center; padding:24px; color:#aaa;">Нет данных</p>';
+    return;
+  }
+
+  for (const locKey of LOCATION_ORDER) {
+    const locData = data.DefenceData[locKey];
+    if (!locData || !Array.isArray(locData.Defenders)) continue;
+
+    const defenders = locData.Defenders;
+    const rows = [...defenders];
+    while (rows.length < 3) rows.push(null);
+    rows.length = 3;
+
+    const sectionName = LOCATION_NAMES[locKey] || locKey;
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.textContent = sectionName;
+    container.appendChild(header);
+
+	const tbl = document.createElement('table');
+	tbl.innerHTML = `
+	  <thead class="table-header-row">
+		<tr>
+		  <th class="col-name">Name</th>
+		  <th class="col-level">Level</th>
+		  <th class="col-troops">Troops</th>
+		  <th class="col-banner">Banner</th>
+		  <th class="col-class">Class</th>
+		</tr>
+	  </thead>
+	  <tbody class="table-body-rows"></tbody>
+	`;
+    const tbody = tbl.querySelector('tbody');
+
+    for (const def of rows) {
+      const tr = tbody.insertRow();
+
+      const cells = [];
+      for (let i = 0; i < 5; i++) {
+        const cell = tr.insertCell();
+        cells.push(cell);
+        if (!def) {
+          const filler = document.createElement('div');
+          filler.style.height = '100%';
+          filler.style.width = '100%';
+          cell.appendChild(filler);
+        }
+      }
+
+      if (!def) continue;
+
+      cells[0].textContent = def.Name || '—';
+      cells[1].textContent = def.Level || '—';
+
+      // Troops
+      const troopsCell = cells[2];
+      const troopIds = def.DefenceTeam?.Troops || [];
+      if (troopIds.length > 0) {
+        const fragment = document.createDocumentFragment();
+        for (const id of troopIds) {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'troop-row';
+          rowDiv.appendChild(createColorWheelSVG(getActiveColors(getItemColors(id))));
+          rowDiv.appendChild(document.createTextNode(getItemName(id)));
+          fragment.appendChild(rowDiv);
+        }
+        troopsCell.appendChild(fragment);
+      } else {
+        troopsCell.textContent = '—';
+      }
+
+      // Banner
+      const bannerCell = cells[3];
+      const bannerId = def.DefenceTeam?.Banner;
+      if (bannerId) {
+        const { name, img } = getBannerInfo(bannerId);
+        const div = document.createElement('div');
+        div.className = 'banner-icon';
+        if (img) {
+          const imgEl = document.createElement('img');
+          imgEl.src = img;
+          imgEl.alt = name;
+          div.appendChild(imgEl);
+        }
+        div.appendChild(document.createTextNode(name));
+        bannerCell.appendChild(div);
+      } else {
+        bannerCell.textContent = '—';
+      }
+
+      // Class
+      const classCell = cells[4];
+      const classCode = def.DefenceTeam?.Class;
+      if (classCode) {
+        const { name, img } = getClassInfo(classCode);
+        const div = document.createElement('div');
+        div.className = 'class-icon';
+        if (img) {
+          const imgEl = document.createElement('img');
+          imgEl.src = img;
+          imgEl.alt = name;
+          div.appendChild(imgEl);
+        }
+        div.appendChild(document.createTextNode(name));
+        classCell.appendChild(div);
+      } else {
+        classCell.textContent = '—';
+      }
+    }
+
+    container.appendChild(tbl);
+  }
+}
+
+// =============== Утилиты ===
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+// =============== Обработка онлайн-загрузки ===
+document.getElementById('onlineForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideError();
+
+  const inviteCode = document.getElementById('inviteCode').value.trim().toUpperCase();
+  const password = document.getElementById('password').value;
+  const warDay = parseInt(document.getElementById('warDaySelect').value, 10);
+
+  if (!inviteCode || !password) {
+    showError('Введите Invite Code и пароль');
+    return;
+  }
+
+  try {
+    const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
+
+    // ШАГ 1: Получить username по Invite Code
+    const profileReq = { functionName: "get_hero_profile", NameCode: inviteCode };
+    const profileResp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileReq)
+    });
+
+    if (!profileResp.ok) {
+      throw new Error(`Ошибка профиля: ${profileResp.status} ${profileResp.statusText}`);
+    }
+
+    const profileJson = await profileResp.json();
+    console.log('🔍 Профиль:', profileJson);
+
+    const realUsername = profileJson?.result?.ProfileData?.username;
+    if (!realUsername || realUsername === "null") {
+      throw new Error('Invite Code не найден или недействителен.');
+    }
+
+/*
+    // ШАГ 2: Расчёт EventId
+    const unixTimestamp = Math.floor(Date.now() / 1000);
+    //const unixWeeks = Math.floor(unixTimestamp / 604800);
+	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
+	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
+    const EventId = unixWeeks + 2452;
+*/
+
+	const nowUtc = Date.now();
+	const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
+	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
+	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
+	const EventId = unixWeeks + 2452;
+
+    console.log(`📅 Invite: ${inviteCode} → username: ${realUsername}`);
+    console.log(`📅 EventId: ${EventId}, WarDay: ${warDay}`);
+
+    // ШАГ 3: Запрос данных войны
+    const warReq = {
+      functionName: "guild_wars_get_guild_keep_data",
+      username: realUsername,
+      password: password,
+      EventId: EventId,
+      WarDay: warDay,
+      NumWars: 4
+    };
+
+    const warResp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(warReq)
+    });
+
+    if (!warResp.ok) {
+      const text = await warResp.text();
+      throw new Error(`HTTP ${warResp.status}: ${text}`);
+    }
+
+    const warJson = await warResp.json();
+    console.log('⚔️ Ответ:', warJson);
+
+    if (!warJson.result?.GuildKeepData) {
+      if (warJson.error) throw new Error(warJson.error);
+      throw new Error('Сервер не вернул GuildKeepData. Проверьте пароль, день войны или EventId.');
+    }
+
+    await ensureLoaded();
+
+    const myData = warJson.result.GuildKeepData.MyKeepData;
+    const oppData = warJson.result.GuildKeepData.OpponentKeepData;
+    const oppName = oppData?.GuildData?.Name || 'Гильдия противника';
+
+    renderGuildSection('myKeep', myData, 'myTitle', 'Моя гильдия');
+    renderGuildSection('opponentKeep', oppData, 'oppTitle', oppName);
+
+  } catch (err) {
+    console.error('❌ Ошибка:', err);
+    showError('Ошибка:\n' + (err.message || err));
+  }
+});
+
+// =============== Загрузка из файла ===
+document.getElementById('jsonFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  const fileNameEl = document.getElementById('fileNameDisplay');
+  if (file) {
+    fileNameEl.textContent = file.name;
+    fileNameEl.style.color = '#4a90e2';
+  } else {
+    fileNameEl.textContent = 'Файл не выбран';
+    fileNameEl.style.color = 'var(--text-light)';
+  }
+});
+
+async function loadJsonFromFile() {
+  const fileInput = document.getElementById('jsonFile');
+  const file = fileInput.files[0];
+  if (!file) {
+    showError('Выберите файл JSON.');
+    return;
+  }
+
+  try {
+    await ensureLoaded();
+    const text = await file.text();
+    const json = JSON.parse(text);
+
+    const myData = json?.result?.GuildKeepData?.MyKeepData;
+    const oppData = json?.result?.GuildKeepData?.OpponentKeepData;
+    const oppName = oppData?.GuildData?.Name || 'Гильдия противника';
+
+    renderGuildSection('myKeep', myData, 'myTitle', 'Моя гильдия');
+    renderGuildSection('opponentKeep', oppData, 'oppTitle', oppName);
+
+    hideError();
+  } catch (e) {
+    console.error(e);
+    showError('Ошибка при загрузке файла:\n' + (e.message || e));
+  }
+}
+
+// Авто-верхний регистр для Invite Code
+document.getElementById('inviteCode').addEventListener('input', function () {
+  const start = this.selectionStart;
+  const end = this.selectionEnd;
+  this.value = this.value.toUpperCase();
+  this.setSelectionRange(start, end);
+});
+</script>
+</body>
+</html>

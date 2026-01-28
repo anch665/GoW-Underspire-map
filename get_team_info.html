@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализатор сборки Gems of War</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #eee;
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(20, 20, 30, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+            background: rgba(30, 30, 45, 0.8);
+            color: #eee;
+        }
+
+        button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(74, 111, 165, 0.4);
+        }
+
+        button:hover {
+            background: #3a5a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(74, 111, 165, 0.6);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .example-section {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .example-section span {
+            color: #64b5f6;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-right: 15px;
+        }
+
+        .example-section span:hover {
+            color: #42a5f5;
+        }
+
+        /* === ОСНОВНОЙ МАКЕТ: 3 КОЛОНКИ === */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 960px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Общие стили для заголовков */
+        .header-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            height: 64px;
+            padding: 0 12px;
+            background: rgba(30, 30, 45, 0.7);
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 16px;
+        }
+
+        .header-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 8px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd700;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Все колонки — фиксированная высота */
+        .section-col {
+            background: rgba(25, 25, 40, 0.8);
+            border-radius: 12px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            height: 480px; /* ✅ Увеличено до 480px */
+            padding: 20px;
+        }
+
+        /* ЛЕВАЯ КОЛОНКА — ФЛАГ */
+        .flag-section {
+            position: relative;
+        }
+
+        .flag-mana-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mana-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mana-color-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .mana-signs {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .mana-sign {
+            font-weight: 700;
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            line-height: 1;
+            vertical-align: middle;
+            /* Цвет берётся от родителя (mana-item), который имеет background-color */
+            color: currentColor;
+        }
+
+        /* Цвета маны — наследуются от .mana-color-dot через wrapper */
+        .mana-item[data-color="blue"] .mana-color-dot { background-color: #0000FF; }
+        .mana-item[data-color="green"] .mana-color-dot { background-color: #00FF00; }
+        .mana-item[data-color="red"] .mana-color-dot { background-color: #FF0000; }
+        .mana-item[data-color="yellow"] .mana-color-dot { background-color: #FFD700; }
+        .mana-item[data-color="purple"] .mana-color-dot { background-color: #800080; }
+        .mana-item[data-color="brown"] .mana-color-dot { background-color: #8B4513; }
+
+        /* Центральная колонка — сборка */
+        .team-section {
+            position: relative;
+        }
+
+        .team-slots {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .team-slot {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px;
+            background: rgba(40, 40, 60, 0.6);
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .team-slot:hover {
+            background: rgba(50, 50, 70, 0.8);
+        }
+
+        .slot-name {
+            font-weight: 600;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Правая колонка — класс */
+        .class-section {
+            position: relative;
+        }
+
+        .talents-list {
+            flex: 1;
+            margin-top: 16px;
+            overflow-y: auto;
+        }
+
+        .talent-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #333;
+        }
+
+        .talent-row:last-child {
+            border-bottom: none;
+        }
+
+        .talent-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #2a4a7a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .talent-name {
+            flex: 1;
+            font-size: 15px;
+            color: #ddd;
+        }
+
+        .talent-status {
+            font-size: 13px;
+            color: #aaa;
+            white-space: nowrap;
+        }
+
+        /* Загрузка и ошибки */
+        .loading {
+            text-align: center;
+            margin: 30px 0;
+            color: #aaa;
+        }
+
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #4a6fa5;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(180, 30, 30, 0.2);
+            border: 1px solid #a00;
+            color: #f88;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .color-wheel-svg {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .color-wheel-svg svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* === ПРЕСЕТЫ === */
+        .presets-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+
+        .presets-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .presets-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-start;
+        }
+
+        .preset-item {
+            background: rgba(40, 40, 60, 0.6);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .preset-item:hover {
+            background: rgba(60, 60, 90, 0.8);
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Анализатор сборки Gems of War</h1>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <textarea id="teamInput" placeholder="Пример: [1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]"></textarea>
+                <button onclick="analyzeTeam()">Анализировать</button>
+            </div>
+            <div class="example-section">
+                Примеры:
+                <span onclick="setExample('[1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]')">Полная</span>
+                <span onclick="setExample('[1426,7622,7654,7720,3059]')">С флагом</span>
+                <span onclick="setExample('[6834,6834,6834,1426,3042,2,2,1,2,3,1,0,14030]')">Скелеты</span>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Загрузка данных...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <div class="layout-grid">
+            <!-- ЛЕВАЯ КОЛОНКА — ФЛАГ -->
+            <div class="section-col flag-section" id="flagSection">
+                <div class="header-row" id="flagHeaderRow">
+                    <div class="header-avatar" id="flagAvatar">
+                        <div style="color:#555; font-size:24px">—</div>
+                    </div>
+                    <div class="header-name" id="flagName"></div>
+                </div>
+                <div class="flag-mana-container" id="flagMana"></div>
+            </div>
+
+            <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА — ОРУЖИЕ/ВОЙСКА -->
+            <div class="section-col team-section" id="teamSection">
+                <!--div class="header-row" id="teamHeaderRow"-->
+                    <!--div class="header-avatar" id="teamAvatar"-->
+                        <!--div style="color:#555; font-size:24px">—</div-->
+                    <!--/div-->
+                    <!--div class="header-name" id="teamName">Сборка</div-->
+                <!--/div-->
+                <div class="team-slots" id="teamSlots"></div>
+            </div>
+
+            <!-- ПРАВАЯ КОЛОНКА — КЛАСС -->
+            <div class="section-col class-section" id="classSection">
+                <div class="header-row" id="classHeaderRow">
+                    <div class="header-avatar" id="classAvatar">
+                        <div style="color:#555; font-size:24px">—</div>
+                    </div>
+                    <div class="header-name" id="className"></div>
+                </div>
+                <div class="talents-list" id="talentsList"></div>
+            </div>
+        </div>
+
+        <!-- БЛОК ПРЕСЕТОВ -->
+        <div class="presets-section" id="presetsSection" style="display:none;">
+            <div class="presets-title">Сборки из team.txt</div>
+            <div class="presets-grid" id="presetsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let GEMS_DATA_DIR = 'gems_of_war_data';
+        let weaponsCache = null, troopsCache = null, classesCache = null, kingdomsCache = null;
+        let presets = [];
+
+        // Цвета GoW: биты 0,2,4,6,8,10 → маски 1,4,16,64,256,1024
+		const COLORS = {
+			'blue': '#0000FF',
+			'green': '#00FF00',
+			'red': '#FF0000',
+			'yellow': '#FFD700',
+			'purple': '#800080',
+			'brown': '#8B4513'
+		};
+
+        const COLOR_ORDER = ['brown', 'purple', 'yellow', 'red', 'green', 'blue' ];
+		const COLOR_MASKS = {
+			'brown':   1,
+			'purple':  4,
+			'yellow': 16,
+			'red':    64,
+			'green': 256,
+			'blue':  1024
+		};
+        function getDataFilePath(filename) {
+            return GEMS_DATA_DIR.replace(/^\/+|\/+$/g, '') + '/' + filename;
+        }
+
+        function parseBannerMana(str) {
+            const result = { blue: 0, green: 0, red: 0, yellow: 0, purple: 0, brown: 0 };
+            if (!str || typeof str !== 'string') return result;
+
+            const regex = /([+-]\d+)\s+([а-яА-ЯёЁ]+)/gi;
+            let match;
+            while ((match = regex.exec(str)) !== null) {
+                const count = parseInt(match[1], 10);
+                let colorWord = match[2].toLowerCase();
+                if (colorWord === 'пурпурный') colorWord = 'purple';
+                else if (colorWord === 'зеленый') colorWord = 'green';
+                else if (colorWord === 'красный') colorWord = 'red';
+                else if (colorWord === 'желтый') colorWord = 'yellow';
+                else if (colorWord === 'синий') colorWord = 'blue';
+                else if (colorWord === 'коричневый') colorWord = 'brown';
+                if (result[colorWord] !== undefined) {
+                    result[colorWord] = count;
+                }
+            }
+            return result;
+        }
+
+        // Возвращает массив { name, color } по числу цветов (биты)
+        function getActiveColors(colorNumber) {
+            const active = [];
+            for (const [name, mask] of Object.entries(COLOR_MASKS)) {
+                if (colorNumber & mask) {
+                    active.push({ name, color: COLORS[name] });
+                }
+            }
+            return active;
+        }
+
+		function createColorWheelSVG(activeColors) {
+			const container = document.createElement('div');
+			container.className = 'color-wheel-svg';
+
+			if (!activeColors || activeColors.length === 0) {
+				container.innerHTML = '<svg width="48" height="48" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#222" /></svg>';
+				return container;
+			}
+
+			// Особый случай: один цвет → рисуем круг
+			if (activeColors.length === 1) {
+				const color = activeColors[0].color;
+				const svg = `
+					<svg width="48" height="48" viewBox="0 0 100 100">
+						<defs>
+							<radialGradient id="glow-single" cx="30%" cy="30%" r="70%">
+								<stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+								<stop offset="70%" stop-color="white" stop-opacity="0"/>
+							</radialGradient>
+						</defs>
+						<circle cx="50" cy="50" r="45" fill="${color}" />
+						<circle cx="50" cy="50" r="15" fill="url(#glow-single)" />
+						<circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+					</svg>
+				`;
+				container.innerHTML = svg;
+				return container;
+			}
+
+			// Многоцветный случай — как раньше
+			const sorted = COLOR_ORDER
+				.map(name => activeColors.find(c => c.name === name))
+				.filter(Boolean);
+
+			const radius = 45;
+			const centerX = 50;
+			const centerY = 50;
+			const totalSegments = sorted.length;
+			const segmentAngle = 360 / totalSegments;
+
+			let paths = '';
+			for (let i = 0; i < totalSegments; i++) {
+				const color = sorted[i].color;
+				const startAngle = i * segmentAngle - 90;
+				const endAngle = (i + 1) * segmentAngle - 90;
+
+				const x1 = centerX + radius * Math.cos(startAngle * Math.PI / 180);
+				const y1 = centerY + radius * Math.sin(startAngle * Math.PI / 180);
+				const x2 = centerX + radius * Math.cos(endAngle * Math.PI / 180);
+				const y2 = centerY + radius * Math.sin(endAngle * Math.PI / 180);
+
+				const largeArc = segmentAngle > 180 ? 1 : 0;
+
+				const pathData = [
+					`M ${centerX} ${centerY}`,
+					`L ${x1} ${y1}`,
+					`A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+					`Z`
+				].join(' ');
+
+				paths += `<path d="${pathData}" fill="${color}" />`;
+			}
+
+			const svg = `
+				<svg width="48" height="48" viewBox="0 0 100 100">
+					<defs>
+						<radialGradient id="glow" cx="30%" cy="30%" r="70%">
+							<stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+							<stop offset="70%" stop-color="white" stop-opacity="0"/>
+						</radialGradient>
+					</defs>
+					${paths}
+					<circle cx="50" cy="50" r="15" fill="url(#glow)" />
+					<circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+				</svg>
+			`;
+
+			container.innerHTML = svg;
+			return container;
+		}
+
+        function setExample(val) {
+            document.getElementById('teamInput').value = val;
+        }
+
+        async function analyzeTeam() {
+            const input = document.getElementById('teamInput').value.trim();
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('errorMessage');
+
+            error.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                if (!weaponsCache || !troopsCache || !classesCache || !kingdomsCache) {
+                    const [w, t, c, k] = await Promise.all([
+                        loadLocalData('Weapons_Russian.json'),
+                        loadLocalData('Troops_Russian.json'),
+                        loadLocalData('ClassesDetails_Russian.json'),
+                        loadLocalData('Kingdoms_Russian.json')
+                    ]);
+                    weaponsCache = w.weapons || w;
+                    troopsCache = t.troops || t;
+                    classesCache = c.classes || c;
+                    kingdomsCache = k.kingdoms || k;
+                }
+
+                const team = JSON.parse(input);
+                if (!Array.isArray(team) || team.length < 4) {
+                    throw new Error('Массив должен содержать ≥4 элементов');
+                }
+
+                // --- ФЛАГ (индекс 4)
+                let flagInfo = null;
+                if (team.length >= 5) {
+                    const flagId = team[4];
+                    flagInfo = kingdomsCache?.find(k => k.id == flagId) || null;
+                }
+
+                // --- Сборка (слоты 0–3)
+                const teamSlots = [];
+                for (let i = 0; i < Math.min(4, team.length); i++) {
+                    const id = team[i];
+                    let item = null;
+                    if (id >= 1000 && id <= 1999) {
+                        item = weaponsCache?.find(w => w.id == id) || null;
+                    } else if (id >= 6000 && id <= 7999) {
+                        item = troopsCache?.find(t => t.id == id) || null;
+                    }
+
+                    const name = item?.name || `ID:${id}`;
+                    const colors = item?.colors || 0;
+                    const activeColors = getActiveColors(colors);
+                    teamSlots.push({ id, name, activeColors });
+                }
+
+                // --- Класс (индекс 12)
+                let classInfo = null;
+                if (team.length >= 13) {
+                    const classId = team[12];
+                    const talentCodes = team.slice(5, 12);
+                    const cls = classesCache?.find(c => c.id == classId) || null;
+                    if (cls) {
+                        const colors = cls.colors || 0;
+                        const activeColors = getActiveColors(colors);
+                        const talents = [];
+
+                        const talentLists = {
+                            '1': cls.talentList1?.split(', ') || [],
+                            '2': cls.talentList2?.split(', ') || [],
+                            '3': cls.talentList3?.split(', ') || []
+                        };
+
+                        for (let i = 0; i < talentCodes.length; i++) {
+                            const code = talentCodes[i];
+                            const name = talentLists[code]?.[i] || '';
+                            const tree = code === '1' ? cls.talent1 : code === '2' ? cls.talent2 : cls.talent3;
+                            talents.push({ pos: i + 1, name, tree, locked: !name });
+                        }
+
+                        classInfo = {
+                            name: cls.name,
+                            avatarUrl: cls.imageUrl || '',
+                            talents,
+                            activeColors
+                        };
+                    }
+                }
+
+                renderFlag(flagInfo);
+                renderTeam(teamSlots);
+                renderClass(classInfo);
+
+            } catch (err) {
+                console.error(err);
+                error.innerHTML = `<strong>Ошибка:</strong> ${err.message}<br>Убедитесь, что файлы существуют и вы запускаете через сервер.`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function loadLocalData(filename) {
+            const path = getDataFilePath(filename);
+            try {
+                const res = await fetch(path);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return await res.json();
+            } catch (e) {
+                const alts = [path, `./${path}`, `${GEMS_DATA_DIR}/${filename}`];
+                for (const p of alts) {
+                    try {
+                        const res = await fetch(p);
+                        if (res.ok) return await res.json();
+                    } catch {}
+                }
+                throw new Error(`Не найден ${filename} в ${GEMS_DATA_DIR}`);
+            }
+        }
+
+        function renderFlag(flagInfo) {
+            const headerRow = document.getElementById('flagHeaderRow');
+            const flagAvatar = document.getElementById('flagAvatar');
+            const flagNameEl = document.getElementById('flagName');
+            const manaContainer = document.getElementById('flagMana');
+
+            if (!flagInfo) {
+                flagNameEl.textContent = '';
+                flagAvatar.innerHTML = '<div style="color:#555; font-size:24px">—</div>';
+                manaContainer.innerHTML = '';
+                return;
+            }
+
+            flagNameEl.textContent = flagInfo.bannerName || '';
+            flagAvatar.innerHTML = flagInfo.bannerImageUrl
+                ? `<img src="${GEMS_DATA_DIR}/banners/${flagInfo.bannerImageUrl}" alt="${flagInfo.bannerName}">`
+                : '<div style="color:#555; font-size:24px">—</div>';
+
+            const manaStr = flagInfo.bannerMana || '';
+            const manaObj = parseBannerMana(manaStr);
+            manaContainer.innerHTML = '';
+
+            // Генерируем ману: для каждого цвета — блок с data-color и стилями
+            for (const [color, val] of Object.entries(manaObj)) {
+                if (val === 0) continue;
+
+                const item = document.createElement('div');
+                item.className = 'mana-item';
+                item.setAttribute('data-color', color); // для CSS-стилей
+
+                const dot = document.createElement('div');
+                dot.className = 'mana-color-dot';
+
+                const signs = document.createElement('div');
+                signs.className = 'mana-signs';
+
+                const absVal = Math.abs(val);
+                for (let i = 0; i < absVal; i++) {
+                    const sign = document.createElement('span');
+                    sign.className = `mana-sign ${val > 0 ? 'pos' : 'neg'}`;
+                    sign.textContent = val > 0 ? '+' : '-';
+                    signs.appendChild(sign);
+                }
+
+                item.appendChild(dot);
+                item.appendChild(signs);
+                manaContainer.appendChild(item);
+            }
+        }
+
+        function renderTeam(slots) {
+            const container = document.getElementById('teamSlots');
+            container.innerHTML = '';
+
+            slots.forEach(slot => {
+                const div = document.createElement('div');
+                div.className = 'team-slot';
+
+                const wheel = createColorWheelSVG(slot.activeColors);
+                const name = document.createElement('div');
+                name.className = 'slot-name';
+                name.textContent = slot.name;
+
+                div.appendChild(wheel);
+                div.appendChild(name);
+                container.appendChild(div);
+            });
+        }
+
+        function renderClass(classInfo) {
+            const headerRow = document.getElementById('classHeaderRow');
+            const classAvatar = document.getElementById('classAvatar');
+            const classNameEl = document.getElementById('className');
+            const talentsEl = document.getElementById('talentsList');
+
+            if (!classInfo) {
+                classNameEl.textContent = '';
+                classAvatar.innerHTML = '<div style="color:#555; font-size:24px">—</div>';
+                talentsEl.innerHTML = '';
+                return;
+            }
+
+            classNameEl.textContent = classInfo.name;
+            classAvatar.innerHTML = classInfo.avatarUrl
+                ? `<img src="${GEMS_DATA_DIR}/classes/${classInfo.avatarUrl}" alt="${classInfo.name}">`
+                : '<div style="color:#555; font-size:24px">—</div>';
+
+            talentsEl.innerHTML = '';
+            if (classInfo.talents.length === 0) return;
+
+            classInfo.talents.forEach(t => {
+                const row = document.createElement('div');
+                row.className = 'talent-row';
+
+                const num = document.createElement('div');
+                num.className = 'talent-number';
+                num.textContent = t.pos;
+
+                const name = document.createElement('div');
+                name.className = 'talent-name';
+                name.textContent = t.name || '—';
+
+                const status = document.createElement('div');
+                status.className = 'talent-status';
+                status.textContent = t.tree || '—';
+
+                row.appendChild(num);
+                row.appendChild(name);
+                row.appendChild(status);
+                talentsEl.appendChild(row);
+            });
+        }
+
+        // === ЗАГРУЗКА ПРЕСЕТОВ ===
+        async function loadPresets() {
+            const presetsSection = document.getElementById('presetsSection');
+            const presetsGrid = document.getElementById('presetsGrid');
+            presetsSection.style.display = 'none';
+            presetsGrid.innerHTML = '';
+
+            try {
+                const res = await fetch('team.txt');
+                if (!res.ok) return;
+
+                const text = await res.text();
+                const lines = text.split('\n');
+                const parsed = [];
+
+                const regex = /^\s*(\[[^\]]+\])\s+"([^"]*)"/;
+                for (const line of lines) {
+                    const match = line.match(regex);
+                    if (match) {
+                        const arrayStr = match[1];
+                        const description = match[2].trim();
+                        try {
+                            JSON.parse(arrayStr);
+                            parsed.push({ arrayStr, description });
+                        } catch (e) { /* skip */ }
+                    }
+                }
+
+                if (parsed.length === 0) return;
+
+                presets = parsed;
+                renderPresets();
+                presetsSection.style.display = 'block';
+            } catch (e) {
+                console.warn('Не удалось загрузить team.txt:', e);
+            }
+        }
+
+        function renderPresets() {
+            const presetsGrid = document.getElementById('presetsGrid');
+            presetsGrid.innerHTML = '';
+
+            const maxWidth = Math.max(...presets.map(p => p.description.length), 10);
+            const charWidth = 8;
+            const itemWidth = Math.min(maxWidth * charWidth, 300);
+
+            presets.forEach(preset => {
+                const el = document.createElement('div');
+                el.className = 'preset-item';
+                el.style.width = `${itemWidth}px`;
+                el.textContent = preset.description;
+                el.title = preset.arrayStr;
+                el.onclick = () => {
+                    document.getElementById('teamInput').value = preset.arrayStr;
+                    analyzeTeam();
+                };
+                presetsGrid.appendChild(el);
+            });
+        }
+
+        // Инициализация
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('teamInput').value = '[1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]';
+            loadPresets();
+        });
+    </script>
+</body>
+</html>
