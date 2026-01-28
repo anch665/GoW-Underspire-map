@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Анализатор сборки Gems of War</title>
     <style>
+        :root {
+            --bg: #0f0f1a;
+            --panel-bg: #1a1a2a;
+            --border: #333;
+            --text: #e0e0e0;
+            --text-light: #aaa;
+            --accent: #ffd700;
+            --btn-bg: #2a3a5a;
+            --btn-hover: #3a4a7a;
+            --error-bg: #442222;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,7 +25,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            background: var(--bg);
             color: #eee;
             padding: 16px;
             min-height: 100vh;
@@ -29,17 +41,14 @@
             padding: 20px;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
         .header h1 {
+            text-align: center;
             font-size: 28px;
             font-weight: 700;
             color: #ffd700;
             text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
             letter-spacing: 1px;
+            margin-bottom: 25px;
         }
 
         .input-section {
@@ -90,24 +99,6 @@
             transform: none;
         }
 
-        .example-section {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        .example-section span {
-            color: #64b5f6;
-            cursor: pointer;
-            text-decoration: underline;
-            margin-right: 15px;
-        }
-
-        .example-section span:hover {
-            color: #42a5f5;
-        }
-
-        /* === ОСНОВНОЙ МАКЕТ: 3 КОЛОНКИ === */
         .layout-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -121,7 +112,6 @@
             }
         }
 
-        /* Общие стили для заголовков */
         .header-row {
             display: flex;
             align-items: center;
@@ -162,20 +152,14 @@
             text-overflow: ellipsis;
         }
 
-        /* Все колонки — фиксированная высота */
         .section-col {
             background: rgba(25, 25, 40, 0.8);
             border-radius: 12px;
             border: 1px solid #333;
             display: flex;
             flex-direction: column;
-            height: 480px; /* ✅ Увеличено до 480px */
+            height: 480px;
             padding: 20px;
-        }
-
-        /* ЛЕВАЯ КОЛОНКА — ФЛАГ */
-        .flag-section {
-            position: relative;
         }
 
         .flag-mana-container {
@@ -213,23 +197,14 @@
             width: 24px;
             text-align: center;
             line-height: 1;
-            vertical-align: middle;
-            /* Цвет берётся от родителя (mana-item), который имеет background-color */
-            color: currentColor;
         }
 
-        /* Цвета маны — наследуются от .mana-color-dot через wrapper */
         .mana-item[data-color="blue"] .mana-color-dot { background-color: #0000FF; }
         .mana-item[data-color="green"] .mana-color-dot { background-color: #00FF00; }
         .mana-item[data-color="red"] .mana-color-dot { background-color: #FF0000; }
         .mana-item[data-color="yellow"] .mana-color-dot { background-color: #FFD700; }
         .mana-item[data-color="purple"] .mana-color-dot { background-color: #800080; }
         .mana-item[data-color="brown"] .mana-color-dot { background-color: #8B4513; }
-
-        /* Центральная колонка — сборка */
-        .team-section {
-            position: relative;
-        }
 
         .team-slots {
             flex: 1;
@@ -259,11 +234,6 @@
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        /* Правая колонка — класс */
-        .class-section {
-            position: relative;
         }
 
         .talents-list {
@@ -309,7 +279,6 @@
             white-space: nowrap;
         }
 
-        /* Загрузка и ошибки */
         .loading {
             text-align: center;
             margin: 30px 0;
@@ -350,12 +319,6 @@
             justify-content: center;
         }
 
-        .color-wheel-svg svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* === ПРЕСЕТЫ === */
         .presets-section {
             margin-top: 30px;
             padding-top: 20px;
@@ -404,12 +367,6 @@
                 <textarea id="teamInput" placeholder="Пример: [1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]"></textarea>
                 <button onclick="analyzeTeam()">Анализировать</button>
             </div>
-            <div class="example-section">
-                Примеры:
-                <span onclick="setExample('[1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]')">Полная</span>
-                <span onclick="setExample('[1426,7622,7654,7720,3059]')">С флагом</span>
-                <span onclick="setExample('[6834,6834,6834,1426,3042,2,2,1,2,3,1,0,14030]')">Скелеты</span>
-            </div>
         </div>
 
         <div class="loading" id="loading" style="display: none;">
@@ -420,7 +377,6 @@
         <div class="error-message" id="errorMessage" style="display: none;"></div>
 
         <div class="layout-grid">
-            <!-- ЛЕВАЯ КОЛОНКА — ФЛАГ -->
             <div class="section-col flag-section" id="flagSection">
                 <div class="header-row" id="flagHeaderRow">
                     <div class="header-avatar" id="flagAvatar">
@@ -431,18 +387,10 @@
                 <div class="flag-mana-container" id="flagMana"></div>
             </div>
 
-            <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА — ОРУЖИЕ/ВОЙСКА -->
             <div class="section-col team-section" id="teamSection">
-                <!--div class="header-row" id="teamHeaderRow"-->
-                    <!--div class="header-avatar" id="teamAvatar"-->
-                        <!--div style="color:#555; font-size:24px">—</div-->
-                    <!--/div-->
-                    <!--div class="header-name" id="teamName">Сборка</div-->
-                <!--/div-->
                 <div class="team-slots" id="teamSlots"></div>
             </div>
 
-            <!-- ПРАВАЯ КОЛОНКА — КЛАСС -->
             <div class="section-col class-section" id="classSection">
                 <div class="header-row" id="classHeaderRow">
                     <div class="header-avatar" id="classAvatar">
@@ -454,38 +402,36 @@
             </div>
         </div>
 
-        <!-- БЛОК ПРЕСЕТОВ -->
         <div class="presets-section" id="presetsSection" style="display:none;">
-            <div class="presets-title">Сборки из team.txt</div>
+            <div class="presets-title">Сборки из team.csv</div>
             <div class="presets-grid" id="presetsGrid"></div>
         </div>
     </div>
 
     <script>
-        // Глобальные переменные
         let GEMS_DATA_DIR = 'gems_of_war_data';
         let weaponsCache = null, troopsCache = null, classesCache = null, kingdomsCache = null;
         let presets = [];
 
-        // Цвета GoW: биты 0,2,4,6,8,10 → маски 1,4,16,64,256,1024
-		const COLORS = {
-			'blue': '#0000FF',
-			'green': '#00FF00',
-			'red': '#FF0000',
-			'yellow': '#FFD700',
-			'purple': '#800080',
-			'brown': '#8B4513'
-		};
+        const COLORS = {
+            'blue': '#0000FF',
+            'green': '#00FF00',
+            'red': '#FF0000',
+            'yellow': '#FFD700',
+            'purple': '#800080',
+            'brown': '#8B4513'
+        };
 
-        const COLOR_ORDER = ['brown', 'purple', 'yellow', 'red', 'green', 'blue' ];
-		const COLOR_MASKS = {
-			'brown':   1,
-			'purple':  4,
-			'yellow': 16,
-			'red':    64,
-			'green': 256,
-			'blue':  1024
-		};
+        const COLOR_ORDER = ['brown', 'purple', 'yellow', 'red', 'green', 'blue'];
+        const COLOR_MASKS = {
+            'brown':   1,
+            'purple':  4,
+            'yellow': 16,
+            'red':    64,
+            'green': 256,
+            'blue':  1024
+        };
+
         function getDataFilePath(filename) {
             return GEMS_DATA_DIR.replace(/^\/+|\/+$/g, '') + '/' + filename;
         }
@@ -512,7 +458,6 @@
             return result;
         }
 
-        // Возвращает массив { name, color } по числу цветов (биты)
         function getActiveColors(colorNumber) {
             const active = [];
             for (const [name, mask] of Object.entries(COLOR_MASKS)) {
@@ -522,90 +467,143 @@
             }
             return active;
         }
-
-		function createColorWheelSVG(activeColors) {
+		
+		function createColorCardImage(activeColors) {
 			const container = document.createElement('div');
-			container.className = 'color-wheel-svg';
+			container.className = 'color-card-image';
+			container.style.width = '48px';
+			container.style.height = '48px';
+			container.style.flexShrink = '0';
 
 			if (!activeColors || activeColors.length === 0) {
-				container.innerHTML = '<svg width="48" height="48" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#222" /></svg>';
+				container.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#555">—</div>';
 				return container;
 			}
 
-			// Особый случай: один цвет → рисуем круг
-			if (activeColors.length === 1) {
-				const color = activeColors[0].color;
-				const svg = `
-					<svg width="48" height="48" viewBox="0 0 100 100">
-						<defs>
-							<radialGradient id="glow-single" cx="30%" cy="30%" r="70%">
-								<stop offset="0%" stop-color="white" stop-opacity="0.6"/>
-								<stop offset="70%" stop-color="white" stop-opacity="0"/>
-							</radialGradient>
-						</defs>
-						<circle cx="50" cy="50" r="45" fill="${color}" />
-						<circle cx="50" cy="50" r="15" fill="url(#glow-single)" />
-						<circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-					</svg>
-				`;
-				container.innerHTML = svg;
+			// Если все 6 цветов — используем All
+			if (activeColors.length === 6) {
+				const img = document.createElement('img');
+				img.src = `${GEMS_DATA_DIR}/troopcard/Troopcardall_All.png`;
+				img.alt = "All colors";
+				img.style.width = '100%';
+				img.style.height = '100%';
+				img.style.objectFit = 'contain';
+				container.appendChild(img);
 				return container;
 			}
 
-			// Многоцветный случай — как раньше
-			const sorted = COLOR_ORDER
-				.map(name => activeColors.find(c => c.name === name))
-				.filter(Boolean);
+			// Преобразуем цвета в имена для файла
+			const colorMap = {
+				'blue': 'Blue',
+				'green': 'Green',
+				'red': 'Red',
+				'yellow': 'Yellow',
+				'purple': 'Purple',
+				'brown': 'Orange'  // ⚠️ Brown → Orange
+			};
 
-			const radius = 45;
-			const centerX = 50;
-			const centerY = 50;
-			const totalSegments = sorted.length;
-			const segmentAngle = 360 / totalSegments;
+			// Сортируем цвета в порядке: Blue, Green, Red, Yellow, Purple, Orange
+			const order = ['blue', 'green', 'red', 'yellow', 'purple', 'brown'];
+			const sortedColors = activeColors
+				.map(c => c.name)
+				.filter(name => order.includes(name))
+				.sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
-			let paths = '';
-			for (let i = 0; i < totalSegments; i++) {
-				const color = sorted[i].color;
-				const startAngle = i * segmentAngle - 90;
-				const endAngle = (i + 1) * segmentAngle - 90;
+			const fileNameParts = sortedColors.map(name => colorMap[name]);
+			const fileName = `Troopcardall_${fileNameParts.join('')}.png`;
 
-				const x1 = centerX + radius * Math.cos(startAngle * Math.PI / 180);
-				const y1 = centerY + radius * Math.sin(startAngle * Math.PI / 180);
-				const x2 = centerX + radius * Math.cos(endAngle * Math.PI / 180);
-				const y2 = centerY + radius * Math.sin(endAngle * Math.PI / 180);
+			const img = document.createElement('img');
+			img.src = `${GEMS_DATA_DIR}/troopcard/${fileName}`;
+			img.alt = fileNameParts.join('+');
+			img.style.width = '100%';
+			img.style.height = '100%';
+			img.style.objectFit = 'contain';
+			img.onerror = () => {
+				// На случай, если файл не найден — показываем заглушку
+				img.style.display = 'none';
+				container.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#777;font-size:10px">?</div>';
+			};
 
-				const largeArc = segmentAngle > 180 ? 1 : 0;
-
-				const pathData = [
-					`M ${centerX} ${centerY}`,
-					`L ${x1} ${y1}`,
-					`A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-					`Z`
-				].join(' ');
-
-				paths += `<path d="${pathData}" fill="${color}" />`;
-			}
-
-			const svg = `
-				<svg width="48" height="48" viewBox="0 0 100 100">
-					<defs>
-						<radialGradient id="glow" cx="30%" cy="30%" r="70%">
-							<stop offset="0%" stop-color="white" stop-opacity="0.6"/>
-							<stop offset="70%" stop-color="white" stop-opacity="0"/>
-						</radialGradient>
-					</defs>
-					${paths}
-					<circle cx="50" cy="50" r="15" fill="url(#glow)" />
-					<circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-				</svg>
-			`;
-
-			container.innerHTML = svg;
+			container.appendChild(img);
 			return container;
 		}
+        function createColorWheelSVG(activeColors) {
+            const container = document.createElement('div');
+            container.className = 'color-wheel-svg';
 
-        function setExample(val) {
-            document.getElementById('teamInput').value = val;
+            if (!activeColors || activeColors.length === 0) {
+                container.innerHTML = '<svg width="48" height="48" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#222" /></svg>';
+                return container;
+            }
+
+            if (activeColors.length === 1) {
+                const color = activeColors[0].color;
+                const svg = `
+                    <svg width="48" height="48" viewBox="0 0 100 100">
+                        <defs>
+                            <radialGradient id="glow-single" cx="30%" cy="30%" r="70%">
+                                <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+                                <stop offset="70%" stop-color="white" stop-opacity="0"/>
+                            </radialGradient>
+                        </defs>
+                        <circle cx="50" cy="50" r="45" fill="${color}" />
+                        <circle cx="50" cy="50" r="15" fill="url(#glow-single)" />
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                    </svg>
+                `;
+                container.innerHTML = svg;
+                return container;
+            }
+
+            const sorted = COLOR_ORDER
+                .map(name => activeColors.find(c => c.name === name))
+                .filter(Boolean);
+
+            const radius = 45;
+            const centerX = 50;
+            const centerY = 50;
+            const totalSegments = sorted.length;
+            const segmentAngle = 360 / totalSegments;
+
+            let paths = '';
+            for (let i = 0; i < totalSegments; i++) {
+                const color = sorted[i].color;
+                const startAngle = i * segmentAngle - 90;
+                const endAngle = (i + 1) * segmentAngle - 90;
+
+                const x1 = centerX + radius * Math.cos(startAngle * Math.PI / 180);
+                const y1 = centerY + radius * Math.sin(startAngle * Math.PI / 180);
+                const x2 = centerX + radius * Math.cos(endAngle * Math.PI / 180);
+                const y2 = centerY + radius * Math.sin(endAngle * Math.PI / 180);
+
+                const largeArc = segmentAngle > 180 ? 1 : 0;
+
+                const pathData = [
+                    `M ${centerX} ${centerY}`,
+                    `L ${x1} ${y1}`,
+                    `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                    `Z`
+                ].join(' ');
+
+                paths += `<path d="${pathData}" fill="${color}" />`;
+            }
+
+            const svg = `
+                <svg width="48" height="48" viewBox="0 0 100 100">
+                    <defs>
+                        <radialGradient id="glow" cx="30%" cy="30%" r="70%">
+                            <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
+                            <stop offset="70%" stop-color="white" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    ${paths}
+                    <circle cx="50" cy="50" r="15" fill="url(#glow)" />
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                </svg>
+            `;
+
+            container.innerHTML = svg;
+            return container;
         }
 
         async function analyzeTeam() {
@@ -635,14 +633,12 @@
                     throw new Error('Массив должен содержать ≥4 элементов');
                 }
 
-                // --- ФЛАГ (индекс 4)
                 let flagInfo = null;
                 if (team.length >= 5) {
                     const flagId = team[4];
                     flagInfo = kingdomsCache?.find(k => k.id == flagId) || null;
                 }
 
-                // --- Сборка (слоты 0–3)
                 const teamSlots = [];
                 for (let i = 0; i < Math.min(4, team.length); i++) {
                     const id = team[i];
@@ -659,7 +655,6 @@
                     teamSlots.push({ id, name, activeColors });
                 }
 
-                // --- Класс (индекс 12)
                 let classInfo = null;
                 if (team.length >= 13) {
                     const classId = team[12];
@@ -724,7 +719,6 @@
         }
 
         function renderFlag(flagInfo) {
-            const headerRow = document.getElementById('flagHeaderRow');
             const flagAvatar = document.getElementById('flagAvatar');
             const flagNameEl = document.getElementById('flagName');
             const manaContainer = document.getElementById('flagMana');
@@ -745,32 +739,62 @@
             const manaObj = parseBannerMana(manaStr);
             manaContainer.innerHTML = '';
 
-            // Генерируем ману: для каждого цвета — блок с data-color и стилями
-            for (const [color, val] of Object.entries(manaObj)) {
-                if (val === 0) continue;
+			for (const [color, val] of Object.entries(manaObj)) {
+				if (val === 0) continue;
 
-                const item = document.createElement('div');
-                item.className = 'mana-item';
-                item.setAttribute('data-color', color); // для CSS-стилей
+				const item = document.createElement('div');
+				item.className = 'mana-item';
+				item.setAttribute('data-color', color);
 
-                const dot = document.createElement('div');
-                dot.className = 'mana-color-dot';
+				// === ЗАМЕНА: вместо .mana-color-dot — изображение ===
+				const imgContainer = document.createElement('div');
+				imgContainer.style.width = '32px';
+				imgContainer.style.height = '32px';
+				imgContainer.style.display = 'flex';
+				imgContainer.style.alignItems = 'center';
+				imgContainer.style.justifyContent = 'center';
 
-                const signs = document.createElement('div');
-                signs.className = 'mana-signs';
+				const colorToFileName = {
+					'blue': 'Blue',
+					'green': 'Green',
+					'red': 'Red',
+					'yellow': 'Yellow',
+					'purple': 'Purple',
+					'brown': 'Orange'  // ⚠️ brown → Orange
+				};
 
-                const absVal = Math.abs(val);
-                for (let i = 0; i < absVal; i++) {
-                    const sign = document.createElement('span');
-                    sign.className = `mana-sign ${val > 0 ? 'pos' : 'neg'}`;
-                    sign.textContent = val > 0 ? '+' : '-';
-                    signs.appendChild(sign);
-                }
+				const fileName = `Troopcardall_${colorToFileName[color]}.png`;
+				const img = document.createElement('img');
+				img.src = `${GEMS_DATA_DIR}/troopcard/${fileName}`;
+				img.alt = color;
+				img.style.width = '100%';
+				img.style.height = '100%';
+				img.style.objectFit = 'contain';
+				img.onerror = () => {
+					// fallback: если файл не найден — показываем цветной кружок
+					img.style.display = 'none';
+					const fallbackDot = document.createElement('div');
+					fallbackDot.className = 'mana-color-dot';
+					fallbackDot.style.backgroundColor = COLORS[color] || '#555';
+					imgContainer.appendChild(fallbackDot);
+				};
+				imgContainer.appendChild(img);
 
-                item.appendChild(dot);
-                item.appendChild(signs);
-                manaContainer.appendChild(item);
-            }
+				const signs = document.createElement('div');
+				signs.className = 'mana-signs';
+
+				const absVal = Math.abs(val);
+				for (let i = 0; i < absVal; i++) {
+					const sign = document.createElement('span');
+					sign.className = 'mana-sign';
+					sign.textContent = val > 0 ? '+' : '-';
+					signs.appendChild(sign);
+				}
+
+				item.appendChild(imgContainer);
+				item.appendChild(signs);
+				manaContainer.appendChild(item);
+			}
         }
 
         function renderTeam(slots) {
@@ -781,19 +805,20 @@
                 const div = document.createElement('div');
                 div.className = 'team-slot';
 
-                const wheel = createColorWheelSVG(slot.activeColors);
+                //const wheel = createColorWheelSVG(slot.activeColors);
+				const colorCard = createColorCardImage(slot.activeColors);
                 const name = document.createElement('div');
                 name.className = 'slot-name';
                 name.textContent = slot.name;
 
-                div.appendChild(wheel);
+                //div.appendChild(wheel);
+				div.appendChild(colorCard);
                 div.appendChild(name);
                 container.appendChild(div);
             });
         }
 
         function renderClass(classInfo) {
-            const headerRow = document.getElementById('classHeaderRow');
             const classAvatar = document.getElementById('classAvatar');
             const classNameEl = document.getElementById('className');
             const talentsEl = document.getElementById('talentsList');
@@ -836,7 +861,7 @@
             });
         }
 
-        // === ЗАГРУЗКА ПРЕСЕТОВ ===
+        // === ЗАГРУЗКА ПРЕСЕТОВ ИЗ team.csv ===
         async function loadPresets() {
             const presetsSection = document.getElementById('presetsSection');
             const presetsGrid = document.getElementById('presetsGrid');
@@ -844,23 +869,23 @@
             presetsGrid.innerHTML = '';
 
             try {
-                const res = await fetch('team.txt');
+                const res = await fetch('team.csv');
                 if (!res.ok) return;
 
                 const text = await res.text();
-                const lines = text.split('\n');
+                const lines = text.split('\n').filter(line => line.trim());
                 const parsed = [];
 
-                const regex = /^\s*(\[[^\]]+\])\s+"([^"]*)"/;
                 for (const line of lines) {
-                    const match = line.match(regex);
-                    if (match) {
-                        const arrayStr = match[1];
-                        const description = match[2].trim();
+                    const parts = line.split(';').map(p => p.trim());
+                    if (parts.length >= 2) {
+                        const arrayStr = parts[0];
+                        const name = parts[1];
+                        const description = parts[2] || '';
                         try {
                             JSON.parse(arrayStr);
-                            parsed.push({ arrayStr, description });
-                        } catch (e) { /* skip */ }
+                            parsed.push({ arrayStr, name, description });
+                        } catch (e) { /* skip invalid */ }
                     }
                 }
 
@@ -870,7 +895,7 @@
                 renderPresets();
                 presetsSection.style.display = 'block';
             } catch (e) {
-                console.warn('Не удалось загрузить team.txt:', e);
+                console.warn('Не удалось загрузить team.csv:', e);
             }
         }
 
@@ -878,7 +903,7 @@
             const presetsGrid = document.getElementById('presetsGrid');
             presetsGrid.innerHTML = '';
 
-            const maxWidth = Math.max(...presets.map(p => p.description.length), 10);
+            const maxWidth = Math.max(...presets.map(p => p.name.length), 10);
             const charWidth = 8;
             const itemWidth = Math.min(maxWidth * charWidth, 300);
 
@@ -886,8 +911,10 @@
                 const el = document.createElement('div');
                 el.className = 'preset-item';
                 el.style.width = `${itemWidth}px`;
-                el.textContent = preset.description;
-                el.title = preset.arrayStr;
+                el.textContent = preset.name;
+                if (preset.description) {
+                    el.title = preset.description;
+                }
                 el.onclick = () => {
                     document.getElementById('teamInput').value = preset.arrayStr;
                     analyzeTeam();
@@ -896,7 +923,6 @@
             });
         }
 
-        // Инициализация
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('teamInput').value = '[1426,7622,7654,7720,3059,2,2,1,1,2,2,2,14020]';
             loadPresets();
