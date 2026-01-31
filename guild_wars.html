@@ -723,14 +723,25 @@ document.getElementById('onlineForm').addEventListener('submit', async (e) => {
 	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
     const EventId = unixWeeks + 2452;
 */
-
+/*
 	const nowUtc = Date.now();
 	const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
 	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
 	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
 	const EventId = unixWeeks + 2452;
+*/
+    const startDateEvent = 1519628400;  // начало событий в секундах UTC+7
+    const LiveEventOffset = 4965;                
+    const weekSeconds = 60 * 60 * 24 * 7;
+    // Текущее время в секундах UTC+7
+    const date = new Date(); // ← добавить эту строку
+    const nowUtc7Seconds = Math.floor(date.getTime() / 1000) + 7 * 60 * 60;
+    // Номер недели от начала событий (без сдвига времени!)
+    const weekNumber = Math.floor((nowUtc7Seconds - startDateEvent) / weekSeconds);
+    // ID события = номер недели + смещение ID
+    const EventId = weekNumber + LiveEventOffset;
 
-    console.log(`📅 Invite: ${inviteCode} → username: ${realUsername}`);
+    //console.log(`📅 Invite: ${inviteCode} → username: ${realUsername}`);
     console.log(`📅 EventId: ${EventId}, WarDay: ${warDay}`);
 
     // ШАГ 3: Запрос данных войны
