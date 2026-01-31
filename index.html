@@ -532,13 +532,17 @@ async function fetchOnlineMap(nameCode, password) {
 	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
 	const LiveEventId = unixWeeks - 2506;
 	*/
-	const startDateEvent = 1519628400;  
-	const LiveEventOffset = 7;  // свдиг в днях для расчета текущего события
-	const weekSeconds = 60 * 60 * 24 * 7;
-	const nowUtc7Seconds  = Math.floor(date.getTime() / 1000) + 7 * 60 * 60;  // текущее время +7UTC
-	const weekNumber  = Math.floor((utc7Seconds - START_UTC7) / WEEK_SECONDS); 
+    const startDateEvent = 1519628400;  // начало событий в секундах UTC+7
+    const LiveEventOffset = 7;                // чтобы неделя 0 имела id = 7
+    const weekSeconds = 60 * 60 * 24 * 7;
+    // Текущее время в секундах UTC+7
+    const date = new Date(); // ← добавить эту строку
+    const nowUtc7Seconds = Math.floor(date.getTime() / 1000) + 7 * 60 * 60;
+    // Номер недели от начала событий (без сдвига времени!)
+    const weekNumber = Math.floor((nowUtc7Seconds - startDateEvent) / weekSeconds);
+    // ID события = номер недели + смещение ID
     const LiveEventId = weekNumber + LiveEventOffset;
-	currentLiveEventId = LiveEventId;
+    currentLiveEventId = LiveEventId;
 	
 	// console.log(`${currentLiveEventId}`)
 	
