@@ -525,13 +525,23 @@ dropZone.addEventListener('drop', (e) => {
 // Онлайн-загрузка
 async function fetchOnlineMap(nameCode, password) {
   try {
+	/*
 	const nowUtc = Date.now();
 	const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
 	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
 	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
 	const LiveEventId = unixWeeks - 2506;
+	*/
+	const startDateEvent = 1519628400;  
+	const LiveEventOffset = 7;  // свдиг в днях для расчета текущего события
+	const weekSeconds = 60 * 60 * 24 * 7;
+	const nowUtc7Seconds  = Math.floor(date.getTime() / 1000) + 7 * 60 * 60;  // текущее время +7UTC
+	const weekNumber  = Math.floor((utc7Seconds - START_UTC7) / WEEK_SECONDS); 
+    const LiveEventId = weekNumber + LiveEventOffset;
 	currentLiveEventId = LiveEventId;
+	
 	// console.log(`${currentLiveEventId}`)
+	
 
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
