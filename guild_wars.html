@@ -183,22 +183,7 @@
       display: block;
       white-space: nowrap;
     }
-	/ *
-    th, td {
-      border: 1px solid var(--border);
-      padding: 10px 8px;
-      vertical-align: top;
-      height: 110px;
-      display: table-cell;
-      line-height: 1.2;
-    }
-	* /
-    th {
-      background: rgba(30, 30, 45, 0.8);
-      font-weight: 600;
-      color: var(--accent);
-    }
-	/* === ЗАГОЛОВКИ СТОЛБЦОВ ТАБЛИЦЫ === */
+    /* === ЗАГОЛОВКИ СТОЛБЦОВ ТАБЛИЦЫ === */
 	.table-header-row th {
 	  background: rgba(30, 30, 45, 0.8);
 	  font-weight: 600;
@@ -323,12 +308,101 @@
 	  min-width: 0;
 	}
 
-	/* Для мобильных: вернуть в одну колонку */
-	@media (max-width: 600px) {
-	  .form-grid {
-		flex-direction: column;
-	  }
-	}
+    .form-grid-three {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .form-col-three {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    /* Стиль для ссылки с подсказкой */
+    .help-link {
+      font-size: 11px;
+      color: #4a90e2;
+      text-decoration: none;
+      margin-top: 4px;
+      display: inline-block;
+    }
+    
+    .help-link:hover {
+      text-decoration: underline;
+      color: #5aa0f2;
+    }
+    
+    /* Подсказка (tooltip) */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 420px;
+      background-color: #2a2a3a;
+      color: #e0e0e0;
+      text-align: center;
+      border-radius: 6px;
+      padding: 6px;
+      position: absolute;
+      z-index: 1;
+	  /* top: 0%; */
+      left: 50%;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -150px;
+      opacity: 1;
+      transition: opacity 0.3s;
+      border: 1px solid #444;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: normal;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    /* Для мобильных: адаптация трехколоночной формы */
+    @media (max-width: 768px) {
+      .form-grid-three {
+        flex-direction: column;
+      }
+    }
+    
+    /* Стили для элементов выбора события */
+    #eventIdError {
+      color: #ff6b6b;
+      margin-top: 4px;
+      font-size: 12px;
+      display: none;
+    }
+    
+    .event-select-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .event-description {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+    
+    .loading-events {
+      color: var(--text-light);
+      font-style: italic;
+      font-size: 12px;
+      text-align: center;
+      padding: 4px 0;
+    }
   </style>
 </head>
 <body>
@@ -340,16 +414,15 @@
 <div id="errorBox" class="error-box"></div>
 
 <!-- === Управление: онлайн + файл (в одну строку) === -->
-<!-- === Управление: онлайн + файл (в одну строку) === -->
 <div class="controls-row">
   <!-- Левая панель: Онлайн авторизация -->
   <div class="panel">
     <div class="panel-header online">Онлайн авторизация</div>
     <div class="panel-body">
       <form id="onlineForm">
-        <div class="form-grid">
+        <div class="form-grid-three">
           <!-- Левая колонка: Invite Code и Password -->
-          <div class="form-col">
+          <div class="form-col-three">
             <div class="form-group">
               <label for="inviteCode">Invite Code:</label>
               <input type="text" id="inviteCode" placeholder="" autocomplete="username" required>
@@ -360,8 +433,24 @@
             </div>
           </div>
 
+          <!-- Центральная колонка: Выбор события -->
+          <div class="form-col-three">
+            <div class="form-group">
+              <label for="eventIdSelect">Выберите событие войны:</label>
+              <div class="event-select-container">
+                <select id="eventIdSelect" required>
+                  <option value="">Загрузка списка событий...</option>
+                </select>
+                <div id="eventIdError"></div>
+                <div class="event-description">
+                  События фильтруются автоматически. Выберите интересующую неделю войны.
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Правая колонка: День войны и кнопка -->
-          <div class="form-col">
+          <div class="form-col-three">
             <div class="form-group">
               <label for="warDaySelect">День войны:</label>
               <select id="warDaySelect">
@@ -678,6 +767,140 @@ function hideError() {
   document.getElementById('errorBox').style.display = 'none';
 }
 
+// =============== Загрузка и обработка событий войны ===============
+function formatDate(date) {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+ //return `${d}-${m}`;
+  return `${d}.${m}.${y}`;
+}
+
+function showErrorEvents(message) {
+  const errorEl = document.getElementById('eventIdError');
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+  
+  const select = document.getElementById('eventIdSelect');
+  select.innerHTML = '<option value="">Ошибка загрузки событий</option>';
+}
+
+async function loadEventsFile() {
+  try {
+    // Сначала попробуем локальный файл
+    let response = await fetch(`${DATA_DIR}/LiveEvents_pcmob.txt`);
+    if (!response.ok) {
+      // Попробуем удаленный
+      response = await fetch('https://garyatrics.com/taran-data/LiveEvents_pcmob.txt');
+    }
+    if (!response.ok) throw new Error('Не удалось загрузить список событий');
+    
+    const text = await response.text();
+    parseEventsText(text);
+  } catch (error) {
+    console.error('Ошибка загрузки событий:', error);
+    showErrorEvents('Не удалось загрузить список событий. Проверьте подключение к интернету.');
+  }
+}
+
+function parseEventsText(text) {
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  const events = [];
+  const now = Date.now() / 1000; // текущее время в секундах
+
+  for (const line of lines) {
+    if (line.includes('~~0~~0')) {
+      const parts = line.split('~~');
+      // Проверяем, что строка имеет правильный формат и последние два поля - нули
+      if (parts.length >= 5 && parts[3] === '0' && parts[4].trim() === '0') {
+        const startEpoch = parseInt(parts[0]);
+        const endEpoch = parseInt(parts[1]);
+        const eventId = parseInt(parts[2]);
+        if (!isNaN(startEpoch) && !isNaN(endEpoch) && !isNaN(eventId)) {
+          events.push({ start: startEpoch, end: endEpoch, eventId });
+        }
+      }
+    }
+  }
+
+  // Сортируем события по дате начала
+  events.sort((a, b) => a.start - b.start);
+
+  // Находим текущее событие (в котором сейчас находимся)
+  let currentEventIndex = -1;
+  for (let i = 0; i < events.length; i++) {
+    if (now >= events[i].start && now <= events[i].end) {
+      currentEventIndex = i;
+      break;
+    }
+  }
+
+  let selectedEvents = [];
+  
+  if (currentEventIndex !== -1) {
+    // Есть текущее событие - берем предыдущее, текущее и следующее
+    if (currentEventIndex > 0) {
+      selectedEvents.push(events[currentEventIndex - 1]);
+    }
+    selectedEvents.push(events[currentEventIndex]);
+    if (currentEventIndex < events.length - 1) {
+      selectedEvents.push(events[currentEventIndex + 1]);
+    }
+  } else {
+    // Нет текущего события - ищем ближайшее прошлое и будущее
+    let lastPast = null;
+    let nextFuture = null;
+    
+    // Ищем последнее прошедшее событие
+    for (let i = events.length - 1; i >= 0; i--) {
+      if (events[i].end < now) {
+        lastPast = events[i];
+        break;
+      }
+    }
+    
+    // Ищем ближайшее будущее событие
+    for (let i = 0; i < events.length; i++) {
+      if (events[i].start > now) {
+        nextFuture = events[i];
+        break;
+      }
+    }
+    
+    if (lastPast) selectedEvents.push(lastPast);
+    if (nextFuture) selectedEvents.push(nextFuture);
+  }
+
+  // Заполняем select
+  const select = document.getElementById('eventIdSelect');
+  select.innerHTML = ''; // очищаем
+
+  if (selectedEvents.length === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Нет доступных событий';
+    option.disabled = true;
+    select.appendChild(option);
+    showErrorEvents('Не найдено подходящих событий для отображения.');
+    return;
+  }
+
+  // Добавляем опции в select
+  selectedEvents.forEach(event => {
+    const startDate = new Date(event.start * 1000);
+    const endDate = new Date(event.end * 1000);
+    //const label = `${formatDate(startDate)}-${formatDate(endDate)} (EventId: ${event.eventId})`;
+	const label = `${formatDate(startDate)}-${formatDate(endDate)}`;
+    const option = document.createElement('option');
+    option.value = event.eventId;
+    option.textContent = label;
+    select.appendChild(option);
+  });
+
+  // Скрываем ошибку, если была
+  document.getElementById('eventIdError').style.display = 'none';
+}
+
 // =============== Обработка онлайн-загрузки ===
 document.getElementById('onlineForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -686,12 +909,24 @@ document.getElementById('onlineForm').addEventListener('submit', async (e) => {
   const inviteCode = document.getElementById('inviteCode').value.trim().toUpperCase();
   const password = document.getElementById('password').value;
   const warDay = parseInt(document.getElementById('warDaySelect').value, 10);
+  const eventIdSelect = document.getElementById('eventIdSelect');
+  const EventId = parseInt(eventIdSelect.value, 10);
 
   if (!inviteCode || !password) {
     showError('Введите Invite Code и пароль');
     return;
   }
 
+  if (!eventIdSelect.value) {
+    showError('Выберите событие войны из списка');
+    return;
+  }
+
+  if (isNaN(EventId) || EventId <= 0) {
+    showError('Выбрано недопустимое событие войны');
+    return;
+  }
+  
   try {
     const apiUrl = "https://pcmob.parse.gemsofwar.com/call_function";
 
@@ -715,36 +950,9 @@ document.getElementById('onlineForm').addEventListener('submit', async (e) => {
       throw new Error('Invite Code не найден или недействителен.');
     }
 
-/*
-    // ШАГ 2: Расчёт EventId
-    const unixTimestamp = Math.floor(Date.now() / 1000);
-    //const unixWeeks = Math.floor(unixTimestamp / 604800);
-	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
-	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
-    const EventId = unixWeeks + 2452;
-*/
-/*
-	const nowUtc = Date.now();
-	const nowUtcMinus7 = nowUtc + 7 * 3600 * 1000;
-	const nowUtcMinus7Plus4Days = nowUtcMinus7 + (4 * 24 * 3600 * 1000); // + 4 дня
-	const unixWeeks = Math.floor(nowUtcMinus7Plus4Days / 1000 / 604800);
-	const EventId = unixWeeks + 2452;
-*/
-    const startDateEvent = 1519628400;  // начало событий в секундах UTC+7
-    const LiveEventOffset = 4965;                
-    const weekSeconds = 60 * 60 * 24 * 7;
-    // Текущее время в секундах UTC+7
-    const date = new Date(); // ← добавить эту строку
-    const nowUtc7Seconds = Math.floor(date.getTime() / 1000) + 7 * 60 * 60;
-    // Номер недели от начала событий (без сдвига времени!)
-    const weekNumber = Math.floor((nowUtc7Seconds - startDateEvent) / weekSeconds);
-    // ID события = номер недели + смещение ID
-    const EventId = weekNumber + LiveEventOffset;
-
-    //console.log(`📅 Invite: ${inviteCode} → username: ${realUsername}`);
     console.log(`📅 EventId: ${EventId}, WarDay: ${warDay}`);
 
-    // ШАГ 3: Запрос данных войны
+    // ШАГ 2: Запрос данных войны
     const warReq = {
       functionName: "guild_wars_get_guild_keep_data",
       username: realUsername,
@@ -835,6 +1043,9 @@ document.getElementById('inviteCode').addEventListener('input', function () {
   this.value = this.value.toUpperCase();
   this.setSelectionRange(start, end);
 });
+
+// Загрузка списка событий при загрузке страницы
+document.addEventListener('DOMContentLoaded', loadEventsFile);
 </script>
 </body>
 </html>
